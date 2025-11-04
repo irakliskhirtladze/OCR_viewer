@@ -1,16 +1,15 @@
 from PySide6.QtGui import QPixmap, Qt, QPainter
-from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QPushButton, QFrame, QHBoxLayout, QSpacerItem, QSizePolicy
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QPushButton, QFrame, QHBoxLayout, QSpacerItem, QSizePolicy
 from PySide6.QtCore import QEvent, QPoint, QTimer
 
-from utils.utils import open_file_dialog
+from utils.file_utils import open_file_dialog
 
 
-class PannableImageWidget(QWidget):
+class PannableImageWidget(QFrame):
     """Custom widget that displays an image with panning support."""
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setStyleSheet("background-color: grey")
         self.pixmap = None
         self.pan_offset = QPoint(0, 0)
         self.last_mouse_pos = None
@@ -118,17 +117,17 @@ class PannableImageWidget(QWidget):
             self.pan_offset.setY(0)
 
 
-class ImageViewerWidget(QWidget):
+class ImageViewerWidget(QFrame):
     """Widget to display an image. Supports file dialog and image drop to display; Zoom in and out; Pan; Reset view"""
 
     def __init__(self):
         super().__init__()
-
         self.setLayout(QVBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
+        self.setStyleSheet("background-color: grey;")
 
         # button and text container
-        self.btn_cont = QWidget()
+        self.btn_cont = QFrame()
         self.btn_cont.setFixedHeight(50)
         self.btn_cont.setLayout(QHBoxLayout())
 
