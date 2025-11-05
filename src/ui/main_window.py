@@ -2,6 +2,7 @@ from PySide6.QtCore import QSize
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QStyleOption, QStyle, QFrame
 
+from ui.models.image_store import ImageStore
 from ui.widgets.image_viewer import ImageViewerWidget
 from ui.widgets.right_container import RightContainer
 
@@ -17,12 +18,14 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
         central_widget.setLayout(QHBoxLayout())
 
+        # Image store
+        self.image_store = ImageStore()
+
         # Add image_viewer to layout
-        self.image_viewer_cont = ImageViewerWidget()
-        central_widget.layout().addWidget(self.image_viewer_cont, 1)
+        self.image_viewer_cont = ImageViewerWidget(self.image_store)
+        central_widget.layout().addWidget(self.image_viewer_cont, 2)
 
         # Add right panel to layout
-        self.right_cont = RightContainer()
-        central_widget.layout().addWidget(self.right_cont, 1)
-
+        self.right_cont = RightContainer(self.image_store)
+        central_widget.layout().addWidget(self.right_cont, 3)
 

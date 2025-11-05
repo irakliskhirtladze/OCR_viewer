@@ -120,11 +120,16 @@ class PannableImageWidget(QFrame):
 class ImageViewerWidget(QFrame):
     """Widget to display an image. Supports file dialog and image drop to display; Zoom in and out; Pan; Reset view"""
 
-    def __init__(self):
+    def __init__(self, image_store):
         super().__init__()
         self.setLayout(QVBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.setStyleSheet("background-color: grey;")
+
+        self.image_store = image_store
+
+        # when original image changes anywhere, show it here as the left panel
+        self.image_store.imageChanged.connect(self.on_image_changed)
 
         # button and text container
         self.btn_cont = QFrame()
@@ -133,8 +138,8 @@ class ImageViewerWidget(QFrame):
 
         self.choose_img_btn = QPushButton("Choose image")
         self.choose_img_btn.setCursor(Qt.PointingHandCursor)
-        self.choose_img_btn.clicked.connect(self.on_choose_image)
         self.btn_cont.layout().addWidget(self.choose_img_btn)
+        self.choose_img_btn.clicked.connect(self.on_choose_image)
 
         self.text_label = QLabel("Or drag and drop an image file below")
         self.btn_cont.layout().addWidget(self.text_label)
@@ -179,17 +184,29 @@ class ImageViewerWidget(QFrame):
         )
         
         if file_path is not None:
-            self.load_image(file_path)
-    
-    def load_image(self, file_path: str):
-        """Load and display an image, scaled to fit the container."""
+            self.show_image(file_path)
+
+    def show_image(self, file_path: str):
+        """Load and display an image, scaled to fit the container. Publish to the store as well"""
         pixmap = QPixmap(file_path)
         if not pixmap.isNull():
             self.original_pixmap = pixmap
-            self.zoom_level = 1.0  # Reset zoom when loading new image
-            self.image_container.pan_offset = QPoint(0, 0)  # Reset pan
+            self.zoom_level = 1.0
+            self.image_container.pan_offset = QPoint(0, 0)
             self.scale_image()
             self.update_zoom_indicator()
+
+            # PUBLISH to the store so everyone (editor, etc.) sees the new original
+            self.image_store.set_original_img(self.original_pixmap.toImage(), file_path)
+            self.image_store.set_edited_img(self.original_pixmap.toImage())
+
+    def on_image_changed(self, qimg, path):
+        """Handle image change event."""
+        self.original_pixmap = QPixmap.fromImage(qimg)
+        self.zoom_level = 1.0
+        self.image_container.pan_offset = QPoint(0, 0)
+        self.scale_image()
+        self.update_zoom_indicator()
 
     def eventFilter(self, obj, event):
         """Filter events for image_container to handle drag and drop and zoom."""
@@ -232,7 +249,7 @@ class ImageViewerWidget(QFrame):
                     file_path = urls[0].toLocalFile()
                     # Validate it's an image
                     if file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff')):
-                        self.load_image(file_path)
+                        self.show_image(file_path)
                         event.acceptProposedAction()
                         return True
                 return True
