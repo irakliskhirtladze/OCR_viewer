@@ -3,7 +3,7 @@ from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QStyleOption, QStyle, QFrame
 
 from ui.models.image_store import ImageStore
-from ui.widgets.image_viewer import ImageViewerWidget
+from ui.widgets.left_container import LeftContainer
 from ui.widgets.right_container import RightContainer
 
 
@@ -12,6 +12,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("OCR Viewer")
         self.setMinimumSize(QSize(800, 600))
+        # self.showMaximized()
 
         # Create central widget with layout
         central_widget = QWidget()
@@ -22,10 +23,9 @@ class MainWindow(QMainWindow):
         self.image_store = ImageStore()
 
         # Add image_viewer to layout
-        self.image_viewer_cont = ImageViewerWidget(self.image_store)
+        self.image_viewer_cont = LeftContainer(self.image_store)
         central_widget.layout().addWidget(self.image_viewer_cont, 2)
 
         # Add right panel to layout
         self.right_cont = RightContainer(self.image_store)
         central_widget.layout().addWidget(self.right_cont, 3)
-

@@ -10,6 +10,8 @@ class PannableImageWidget(QFrame):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setStyleSheet("background-color: grey;")
+
         self.pixmap = None
         self.pan_offset = QPoint(0, 0)
         self.last_mouse_pos = None
@@ -117,14 +119,13 @@ class PannableImageWidget(QFrame):
             self.pan_offset.setY(0)
 
 
-class ImageViewerWidget(QFrame):
+class OriginalImageViewer(QFrame):
     """Widget to display an image. Supports file dialog and image drop to display; Zoom in and out; Pan; Reset view"""
 
     def __init__(self, image_store):
         super().__init__()
         self.setLayout(QVBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
-        self.setStyleSheet("background-color: grey;")
 
         self.image_store = image_store
 
@@ -327,3 +328,22 @@ class ImageViewerWidget(QFrame):
         super().resizeEvent(event)
         self.scale_image()
 
+
+class TextViewerWidget(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.setLayout(QVBoxLayout())
+        self.setMinimumSize(100, 100)
+
+
+class LeftContainer(QFrame):
+    def __init__(self, image_store):
+        super().__init__()
+        self.setLayout(QVBoxLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
+
+        self.original_image_viewer = OriginalImageViewer(image_store)
+        self.layout().addWidget(self.original_image_viewer, 2)
+
+        self.text_viewer = TextViewerWidget()
+        self.layout().addWidget(self.text_viewer, 1)

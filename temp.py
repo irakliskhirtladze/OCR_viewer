@@ -7,7 +7,7 @@ from PIL import Image
 from numpy.ma.extras import median
 
 from src.core.ocr_engine import sample_ocr
-from src.core.processor import auto_deskew, to_gray, to_binary, invert, dilate, remove_borders
+from src.core.processor import auto_deskew, to_gray, to_binary, invert, dilate, remove_borders, gaussian_blur
 from utils.file_utils import resource_path
 
 if __name__ == '__main__':
@@ -16,12 +16,13 @@ if __name__ == '__main__':
     rotated_file_bordered = resource_path("data/page_01_rotated.JPG").as_posix()
 
     # OpenCV images
-    img = cv2.imread(rotated_file_bordered)
-    copied_img = img.copy()
+    img = cv2.imread(image_file)
 
     # processing
     grey = to_gray(img)
     unbordered = remove_borders(grey)
+
+    gaussian = gaussian_blur(unbordered, (19, 1))
 
     deskewed = auto_deskew(img)
     grey = to_gray(deskewed)
@@ -33,4 +34,4 @@ if __name__ == '__main__':
     dilated = dilate(inverted, kernel, 1)
     inverted = invert(dilated)
 
-    Image.fromarray(unbordered).show()
+    Image.fromarray(gaussian).show()
