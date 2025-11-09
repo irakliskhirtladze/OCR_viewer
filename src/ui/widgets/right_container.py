@@ -1,9 +1,13 @@
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QCheckBox, QSpacerItem, QSizePolicy, QLabel, QSlider, \
-    QSpinBox
+    QSpinBox, QPushButton
 
 import numpy as np
+
+from core.ocr_engine import orc_tesseract
+from ui.models.image_store import ImageStore
+from ui.models.text_store import TextStore
 from utils.image_convert import qimage_to_cv, cv_to_qimage
 from core import processor
 
@@ -49,6 +53,7 @@ class GrayscaleFilterWidget(BaseFilterWidget):
 
         self.checkbox.toggled.connect(self._on_toggled)
 
+    @Slot(bool)
     def _on_toggled(self):
         self.paramsChanged.emit()
 
@@ -100,11 +105,13 @@ class BinaryFilterWidget(BaseFilterWidget):
         self.checkbox.toggled.connect(self._on_checkbox_toggled)
         self.slider.valueChanged.connect(self._on_slider_changed)
 
-    def _on_checkbox_toggled(self, checked):
+    @Slot(bool)
+    def _on_checkbox_toggled(self, checked: bool):
         self.slider.setEnabled(checked)
         self.paramsChanged.emit()
 
-    def _on_slider_changed(self, value):
+    @Slot(int)
+    def _on_slider_changed(self, value: int):
         self.threshold_label.setText(str(value))
         if self.checkbox.isChecked():
             self.paramsChanged.emit()
@@ -142,6 +149,7 @@ class InvertFilterWidget(BaseFilterWidget):
 
         self.checkbox.toggled.connect(self._on_toggled)
 
+    @Slot(bool)
     def _on_toggled(self):
         self.paramsChanged.emit()
 
@@ -196,11 +204,13 @@ class GaussianFilterWidget(BaseFilterWidget):
         self.ksize_spinbox_1.valueChanged.connect(self._on_ksize_changed)
         self.ksize_spinbox_2.valueChanged.connect(self._on_ksize_changed)
 
-    def _on_checkbox_toggled(self, checked):
+    @Slot(bool)
+    def _on_checkbox_toggled(self, checked: bool):
         self.ksize_spinbox_1.setEnabled(checked)
         self.ksize_spinbox_2.setEnabled(checked)
         self.paramsChanged.emit()
 
+    @Slot()
     def _on_ksize_changed(self):
         if self.checkbox.isChecked():
             self.paramsChanged.emit()
@@ -250,10 +260,12 @@ class MedianFilterWidget(BaseFilterWidget):
         self.checkbox.toggled.connect(self._on_checkbox_toggled)
         self.ksize_spinbox.valueChanged.connect(self._on_ksize_changed)
 
-    def _on_checkbox_toggled(self, checked):
+    @Slot(bool)
+    def _on_checkbox_toggled(self, checked: bool):
         self.ksize_spinbox.setEnabled(checked)
         self.paramsChanged.emit()
 
+    @Slot()
     def _on_ksize_changed(self):
         self.paramsChanged.emit()
 
@@ -279,13 +291,16 @@ class MedianFilterWidget(BaseFilterWidget):
 class EditorContainer(QFrame):
     """Main container that manages all filter widgets"""
 
-    def __init__(self, image_store):
+    def __init__(self, image_store: ImageStore, text_store: TextStore):
         super().__init__()
         self.setLayout(QVBoxLayout())
         self.layout().setSpacing(20)
 
         self.image_store = image_store
         self.original_cv_img = None  # OpenCV version of original image
+
+        self.text_store = text_store
+        self.text_store.text = None
 
         # List of all filters (order matters - they're applied sequentially)
         self.filters = [
@@ -300,6 +315,11 @@ class EditorContainer(QFrame):
         for filter_widget in self.filters:
             self.layout().addWidget(filter_widget)
             filter_widget.paramsChanged.connect(self.on_params_changed)
+
+        # Button to run OCR
+        self.run_ocr_btn = QPushButton("Run OCR")
+        self.layout().addWidget(self.run_ocr_btn)
+        self.run_ocr_btn.clicked.connect(self.run_ocr)
 
         # Vertical spacer to push filters to top
         v_spacer = QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -316,6 +336,7 @@ class EditorContainer(QFrame):
         # Initialize edited image with original
         self.image_store.set_edited_img(qimg)
 
+    @Slot()
     def on_params_changed(self):
         """Handle parameter changes and apply all filters in sequence"""
         if self.original_cv_img is None:
@@ -337,9 +358,20 @@ class EditorContainer(QFrame):
         for filter_widget in self.filters:
             filter_widget.reset()
 
+    @Slot()
+    def run_ocr(self):
+        """Run the OCR on img"""
+        edited_img = self.image_store.edited_img()
+        if edited_img is None:
+            return
+
+        cv_img = qimage_to_cv(edited_img)
+        text = orc_tesseract(cv_img, lang="eng")
+        self.text_store.set_text(text)
+
 
 class EditedImageViewer(QFrame):
-    def __init__(self, image_store):
+    def __init__(self, image_store: ImageStore):
         super().__init__()
         self.setLayout(QHBoxLayout())
         self.setStyleSheet("background-color: grey;")
@@ -381,10 +413,10 @@ class EditedImageViewer(QFrame):
 
 
 class RightContainer(QFrame):
-    def __init__(self, image_store):
+    def __init__(self, image_store: ImageStore, text_store: TextStore):
         super().__init__()
         self.setLayout(QHBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
 
-        self.layout().addWidget(EditorContainer(image_store), 1)
+        self.layout().addWidget(EditorContainer(image_store, text_store), 1)
         self.layout().addWidget(EditedImageViewer(image_store), 2)

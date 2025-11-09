@@ -1,12 +1,10 @@
 import cv2
+import numpy as np
 from PIL import Image
-# from pytesseract import pytesseract
-
-from utils.file_utils import resource_path
+from pytesseract import pytesseract
 
 
-def sample_ocr() -> None:
-    pass
-
-    # text = pytesseract.image_to_string(im_bw)
-    # print(text)
+def orc_tesseract(img: np.ndarray, lang: str = "eng") -> str:
+    """Takes OpenCV image and extracts OCR text from it."""
+    text = pytesseract.image_to_string(img, lang=lang, config="--psm 3")
+    return text

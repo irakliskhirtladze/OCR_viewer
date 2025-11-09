@@ -40,6 +40,7 @@ def get_skew_angle(cv_image: np.ndarray) -> float:
 
     # Determine the angle. Convert it to the value that was originally used to obtain skewed image
     angle = min_area_rect[-1]
+    print(f"angle: {angle}")
     if angle < -45:
         angle = 90 + angle
 

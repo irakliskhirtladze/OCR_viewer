@@ -1,7 +1,9 @@
-from PySide6.QtGui import QPixmap, Qt, QPainter
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QPushButton, QFrame, QHBoxLayout, QSpacerItem, QSizePolicy
-from PySide6.QtCore import QEvent, QPoint, QTimer
+from PySide6.QtGui import QPixmap, Qt, QPainter, QImage
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QPushButton, QFrame, QHBoxLayout, QSpacerItem, QSizePolicy, QTextEdit
+from PySide6.QtCore import QEvent, QPoint, QTimer, Slot
 
+from ui.models.image_store import ImageStore
+from ui.models.text_store import TextStore
 from utils.file_utils import open_file_dialog
 
 
@@ -122,7 +124,7 @@ class PannableImageWidget(QFrame):
 class OriginalImageViewer(QFrame):
     """Widget to display an image. Supports file dialog and image drop to display; Zoom in and out; Pan; Reset view"""
 
-    def __init__(self, image_store):
+    def __init__(self, image_store: ImageStore):
         super().__init__()
         self.setLayout(QVBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
@@ -176,6 +178,7 @@ class OriginalImageViewer(QFrame):
         self.image_container.setAcceptDrops(True)
         self.image_container.installEventFilter(self)
 
+    @Slot()
     def on_choose_image(self):
         """Open file dialog to choose an image and display it."""
         file_path = open_file_dialog(
@@ -201,7 +204,8 @@ class OriginalImageViewer(QFrame):
             self.image_store.set_original_img(self.original_pixmap.toImage(), file_path)
             self.image_store.set_edited_img(self.original_pixmap.toImage())
 
-    def on_image_changed(self, qimg, path):
+    @Slot(QImage, str)
+    def on_image_changed(self, qimg: QImage, path: str):
         """Handle image change event."""
         self.original_pixmap = QPixmap.fromImage(qimg)
         self.zoom_level = 1.0
@@ -330,14 +334,24 @@ class OriginalImageViewer(QFrame):
 
 
 class TextViewerWidget(QFrame):
-    def __init__(self):
+    def __init__(self, text_store: TextStore):
         super().__init__()
         self.setLayout(QVBoxLayout())
-        self.setMinimumSize(100, 100)
+        self.layout().setContentsMargins(0, 0, 0, 0)
+
+        self.text_edit = QTextEdit()
+        self.text_edit.setStyleSheet("border: 1px solid #ccc;")
+        self.layout().addWidget(self.text_edit)
+
+        self.text_store = text_store
+        self.text_store.text_changed.connect(self._on_text_changed)
+
+    def _on_text_changed(self, text):
+        self.text_edit.setText(text)
 
 
 class LeftContainer(QFrame):
-    def __init__(self, image_store):
+    def __init__(self, image_store: ImageStore, text_store: TextStore):
         super().__init__()
         self.setLayout(QVBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
@@ -345,5 +359,5 @@ class LeftContainer(QFrame):
         self.original_image_viewer = OriginalImageViewer(image_store)
         self.layout().addWidget(self.original_image_viewer, 2)
 
-        self.text_viewer = TextViewerWidget()
+        self.text_viewer = TextViewerWidget(text_store)
         self.layout().addWidget(self.text_viewer, 1)
