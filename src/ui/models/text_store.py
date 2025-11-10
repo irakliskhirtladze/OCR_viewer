@@ -6,13 +6,13 @@ class TextStore(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.text = None
+        self._text = None
 
-    def text(self) -> str | None:
-        """returns current text"""
-        return self.text
+    def get_text(self) -> str | None:
+        """returns current text from store instance"""
+        return self._text
 
     def set_text(self, text: str) -> None:
         """Sets current text to store instance"""
-        self.text = text
+        self._text = text
         self.text_changed.emit(text)

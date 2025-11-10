@@ -1,15 +1,14 @@
+import numpy as np
 from PySide6.QtCore import Qt, Signal, Slot
-from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtGui import QImage
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QCheckBox, QSpacerItem, QSizePolicy, QLabel, QSlider, \
     QSpinBox, QPushButton
 
-import numpy as np
-
+from core import processor
 from core.ocr_engine import orc_tesseract
 from ui.models.image_store import ImageStore
 from ui.models.text_store import TextStore
 from utils.image_convert import qimage_to_cv, cv_to_qimage
-from core import processor
 
 
 # ============================================================================
@@ -361,62 +360,10 @@ class EditorContainer(QFrame):
     @Slot()
     def run_ocr(self):
         """Run the OCR on img"""
-        edited_img = self.image_store.edited_img()
+        edited_img = self.image_store.get_edited_img()
         if edited_img is None:
             return
 
         cv_img = qimage_to_cv(edited_img)
         text = orc_tesseract(cv_img, lang="eng")
         self.text_store.set_text(text)
-
-
-class EditedImageViewer(QFrame):
-    def __init__(self, image_store: ImageStore):
-        super().__init__()
-        self.setLayout(QHBoxLayout())
-        self.setStyleSheet("background-color: grey;")
-        self.layout().setContentsMargins(0, 0, 0, 0)
-
-        self.image_store = image_store
-
-        # Label for the edited image
-        self.label = QLabel()
-        self.label.setAlignment(Qt.AlignCenter)
-        self.layout().addWidget(self.label)
-
-        # Store original pixmap for scaling
-        self.original_pixmap = None
-
-        # when edited image changes anywhere, show it here as the right panel
-        self.image_store.editedImageChanged.connect(self.show_image)
-
-    def show_image(self, qimg: QImage):
-        """Set image on the label"""
-        if qimg is not None and not qimg.isNull():
-            self.original_pixmap = QPixmap.fromImage(qimg)
-            self.scale_image()
-
-    def scale_image(self):
-        """Scale the pixmap to fit the label while maintaining aspect ratio"""
-        if self.original_pixmap is not None and not self.original_pixmap.isNull():
-            scaled_pixmap = self.original_pixmap.scaled(
-                self.label.size(),
-                Qt.KeepAspectRatio,
-                Qt.SmoothTransformation
-            )
-            self.label.setPixmap(scaled_pixmap)
-
-    def resizeEvent(self, event):
-        """Handle widget resize to rescale the image"""
-        super().resizeEvent(event)
-        self.scale_image()
-
-
-class RightContainer(QFrame):
-    def __init__(self, image_store: ImageStore, text_store: TextStore):
-        super().__init__()
-        self.setLayout(QHBoxLayout())
-        self.layout().setContentsMargins(0, 0, 0, 0)
-
-        self.layout().addWidget(EditorContainer(image_store, text_store), 1)
-        self.layout().addWidget(EditedImageViewer(image_store), 2)

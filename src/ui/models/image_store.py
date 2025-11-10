@@ -17,10 +17,10 @@ class ImageStore(QObject):
         self._img, self._path = img, path
         self.imageChanged.emit(self._img, self._path)
 
-    def original_img(self) -> QImage:
+    def get_original_img(self) -> QImage:
         return self._img
 
-    def path(self) -> str:
+    def get_path(self) -> str:
         return self._path
 
     # editor preview
@@ -28,5 +28,5 @@ class ImageStore(QObject):
         self._edited_img = img
         self.editedImageChanged.emit(self._edited_img)
 
-    def edited_img(self) -> QImage:
+    def get_edited_img(self) -> QImage:
         return self._edited_img

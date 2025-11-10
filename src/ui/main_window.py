@@ -1,11 +1,11 @@
 from PySide6.QtCore import QSize
-from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QStyleOption, QStyle, QFrame
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QFrame
 
 from ui.models.image_store import ImageStore
 from ui.models.text_store import TextStore
-from ui.widgets.left_container import LeftContainer
-from ui.widgets.right_container import RightContainer
+from ui.widgets.editor_panel import EditorContainer
+from ui.widgets.image_viewers import OriginalImageViewer, EditedImageViewer
+from ui.widgets.text_viewer import TextViewerWidget
 
 
 class MainWindow(QMainWindow):
@@ -24,10 +24,27 @@ class MainWindow(QMainWindow):
         self.image_store = ImageStore()
         self.text_store = TextStore()
 
-        # Add image_viewer to layout
-        self.image_viewer_cont = LeftContainer(self.image_store, self.text_store)
-        central_widget.layout().addWidget(self.image_viewer_cont, 2)
+        # ========================================================================
+        # Left container
+        # ========================================================================
+        self.left_container = QFrame()
+        central_widget.layout().addWidget(self.left_container, 2)
+        self.left_container.setLayout(QVBoxLayout())
+        self.left_container.layout().setContentsMargins(0, 0, 0, 0)
 
-        # Add right panel to layout
-        self.right_cont = RightContainer(self.image_store, self.text_store)
-        central_widget.layout().addWidget(self.right_cont, 3)
+        self.original_image_viewer = OriginalImageViewer(self.image_store)
+        self.left_container.layout().addWidget(self.original_image_viewer, 2)
+
+        self.text_viewer = TextViewerWidget(self.text_store)
+        self.left_container.layout().addWidget(self.text_viewer, 1)
+
+        # ========================================================================
+        # right container
+        # ========================================================================
+        self.right_container = QFrame()
+        central_widget.layout().addWidget(self.right_container, 3)
+        self.right_container.setLayout(QHBoxLayout())
+        self.right_container.layout().setContentsMargins(0, 0, 0, 0)
+
+        self.right_container.layout().addWidget(EditorContainer(self.image_store, self.text_store), 1)
+        self.right_container.layout().addWidget(EditedImageViewer(self.image_store), 2)
