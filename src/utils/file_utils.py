@@ -1,10 +1,7 @@
-from pathlib import Path
 import sys
-
-from PySide6.QtWidgets import QFileDialog
-from PySide6.QtWidgets import QFileDialog
-from PySide6.QtCore import QDir
 from pathlib import Path
+
+from PySide6.QtWidgets import QFileDialog, QErrorMessage
 
 
 def resource_path(rel: str | Path) -> Path:

@@ -1,20 +1,20 @@
 import numpy as np
-from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtCore import Qt, Signal, Slot, QThreadPool, QRunnable
 from PySide6.QtGui import QImage
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QCheckBox, QSpacerItem, QSizePolicy, QLabel, QSlider, \
-    QSpinBox, QPushButton
+    QSpinBox, QPushButton, QErrorMessage
 
-from core import processor
-from core.ocr_engine import orc_tesseract
+from backend import processor
+from backend.ocr_engine import orc_tesseract
 from ui.models.image_store import ImageStore
 from ui.models.text_store import TextStore
 from utils.image_convert import qimage_to_cv, cv_to_qimage
+from utils.worker_manager import Worker
 
 
 # ============================================================================
 # Base Filter Widget
 # ============================================================================
-
 class BaseFilterWidget(QFrame):
     """Abstract base class for all filter widgets"""
     paramsChanged = Signal()
@@ -38,7 +38,6 @@ class BaseFilterWidget(QFrame):
 # ============================================================================
 # Individual Filter Widgets
 # ============================================================================
-
 class GrayscaleFilterWidget(BaseFilterWidget):
     """Converts image to grayscale"""
 
@@ -286,7 +285,6 @@ class MedianFilterWidget(BaseFilterWidget):
 # ============================================================================
 # Editor Container (Orchestrator)
 # ============================================================================
-
 class EditorContainer(QFrame):
     """Main container that manages all filter widgets"""
 
@@ -318,11 +316,14 @@ class EditorContainer(QFrame):
         # Button to run OCR
         self.run_ocr_btn = QPushButton("Run OCR")
         self.layout().addWidget(self.run_ocr_btn)
-        self.run_ocr_btn.clicked.connect(self.run_ocr)
+        self.run_ocr_btn.clicked.connect(self.ocr_worker)
 
         # Vertical spacer to push filters to top
         v_spacer = QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.layout().addItem(v_spacer)
+
+        # set up threadpool to run ocr in separate thread
+        self.threadpool = QThreadPool()
 
         # Connect to original image changes
         self.image_store.imageChanged.connect(self.on_original_image_changed)
@@ -357,13 +358,30 @@ class EditorContainer(QFrame):
         for filter_widget in self.filters:
             filter_widget.reset()
 
+    # ============================================================================
+    # OCR worker
+    # ============================================================================
     @Slot()
-    def run_ocr(self):
+    def ocr_worker(self):
+        """worker method to call and run ocr process in another thread"""
+        worker = Worker(self.run_ocr)
+        worker.signals.result.connect(self._on_ocr_successful)
+        worker.signals.error.connect(self._on_ocr_error)
+        self.threadpool.start(worker)
+
+    def run_ocr(self) -> str | None:
         """Run the OCR on img"""
         edited_img = self.image_store.get_edited_img()
-        if edited_img is None:
-            return
-
         cv_img = qimage_to_cv(edited_img)
         text = orc_tesseract(cv_img, lang="eng")
+        return text
+
+    def _on_ocr_successful(self, text: str):
+        """Set the result text to textarea if ocr is completed"""
         self.text_store.set_text(text)
+
+    def _on_ocr_error(self, error: tuple):
+        """Show error dialog"""
+        error_dialog = QErrorMessage(self)
+        err_message = str(error[1])
+        error_dialog.showMessage(err_message)

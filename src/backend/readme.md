@@ -1,0 +1,1 @@
+This is a backend of the app that handles all the logic and is independent from UI.
