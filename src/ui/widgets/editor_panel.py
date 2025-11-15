@@ -8,7 +8,7 @@ from backend import processor
 from backend.ocr_engine import orc_tesseract
 from backend.processor import dilate, erode
 from ui.models.image_store import ImageStore
-from ui.models.text_store import TextStore
+from ui.models.ocr_store import OCRStore
 from utils.image_convert import qimage_to_cv, cv_to_qimage
 from utils.worker_manager import Worker
 
@@ -403,7 +403,7 @@ class DilationErosionFilterWidget(BaseFilterWidget):
 class EditorContainer(QFrame):
     """Main container that manages all filter widgets"""
 
-    def __init__(self, image_store: ImageStore, text_store: TextStore):
+    def __init__(self, image_store: ImageStore, ocr_store: OCRStore):
         super().__init__()
         self.setLayout(QVBoxLayout())
         self.layout().setSpacing(20)
@@ -411,8 +411,8 @@ class EditorContainer(QFrame):
         self.image_store = image_store
         self.original_cv_img = None  # OpenCV version of original image
 
-        self.text_store = text_store
-        self.text_store.text = None
+        self.ocr_store = ocr_store
+        self.ocr_store.text = None
 
         # List of all filters (order matters - they're applied sequentially)
         self.filters = [
@@ -499,7 +499,7 @@ class EditorContainer(QFrame):
     @Slot()
     def _on_ocr_successful(self, text: str):
         """Set the result text to textarea if ocr is completed"""
-        self.text_store.set_text(text)
+        self.ocr_store.set_text(text)
 
     @Slot()
     def _on_ocr_error(self, error: tuple):

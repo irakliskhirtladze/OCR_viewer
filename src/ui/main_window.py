@@ -2,7 +2,7 @@ from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QFrame
 
 from ui.models.image_store import ImageStore
-from ui.models.text_store import TextStore
+from ui.models.ocr_store import OCRStore
 from ui.widgets.editor_panel import EditorContainer
 from ui.widgets.image_viewers import OriginalImageViewer, EditedImageViewer
 from ui.widgets.text_viewer import TextViewerWidget
@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
 
         # Image store
         self.image_store = ImageStore()
-        self.text_store = TextStore()
+        self.ocr_store = OCRStore()
 
         # ========================================================================
         # Left container
@@ -34,7 +34,7 @@ class MainWindow(QMainWindow):
         self.original_image_viewer = OriginalImageViewer(self.image_store)
         self.left_container.layout().addWidget(self.original_image_viewer, 2)
 
-        self.text_viewer = TextViewerWidget(self.text_store)
+        self.text_viewer = TextViewerWidget(self.ocr_store)
         self.left_container.layout().addWidget(self.text_viewer, 1)
 
         # ========================================================================
@@ -45,5 +45,5 @@ class MainWindow(QMainWindow):
         self.right_container.setLayout(QHBoxLayout())
         self.right_container.layout().setContentsMargins(0, 0, 0, 0)
 
-        self.right_container.layout().addWidget(EditorContainer(self.image_store, self.text_store), 1)
+        self.right_container.layout().addWidget(EditorContainer(self.image_store, self.ocr_store), 1)
         self.right_container.layout().addWidget(EditedImageViewer(self.image_store), 2)

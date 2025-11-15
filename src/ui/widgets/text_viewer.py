@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import QVBoxLayout, QFrame, QTextEdit
 
-from ui.models.text_store import TextStore
+from ui.models.ocr_store import OCRStore
 
 
 class TextViewerWidget(QFrame):
-    def __init__(self, text_store: TextStore):
+    def __init__(self, text_store: OCRStore):
         super().__init__()
         self.setLayout(QVBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
