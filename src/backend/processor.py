@@ -97,11 +97,13 @@ def bilateral_filter(image: np.ndarray, d: int, sigma_color: int, sigma_space: i
     return cv2.bilateralFilter(image, d, sigma_color, sigma_space)
 
 
-def dilate(image: np.ndarray, kernel: np.ndarray, iterations) -> np.ndarray:
+def dilate(image: np.ndarray, kernel: tuple[int, int], iterations: int) -> np.ndarray:
     """Dilate an image"""
-    return cv2.dilate(image, kernel, iterations=iterations)
+    np_kernel = np.ones(kernel, np.uint8)
+    return cv2.dilate(image, np_kernel, iterations=iterations)
 
 
-def erode(image: np.ndarray, kernel: np.ndarray, iterations) -> np.ndarray:
+def erode(image: np.ndarray, kernel: tuple[int, int], iterations: int) -> np.ndarray:
     """Erode an image"""
-    return cv2.erode(image, kernel, iterations=iterations)
+    np_kernel = np.ones(kernel, np.uint8)
+    return cv2.erode(image, np_kernel, iterations=iterations)

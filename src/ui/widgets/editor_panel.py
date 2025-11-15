@@ -1,11 +1,12 @@
 import numpy as np
 from PySide6.QtCore import Qt, Signal, Slot, QThreadPool, QRunnable
 from PySide6.QtGui import QImage
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QCheckBox, QSpacerItem, QSizePolicy, QLabel, QSlider, \
-    QSpinBox, QPushButton, QErrorMessage
+from PySide6.QtWidgets import (QFrame, QHBoxLayout, QVBoxLayout, QCheckBox, QSpacerItem, QSizePolicy, QLabel, QSlider,
+                               QSpinBox, QPushButton, QErrorMessage, QApplication, QRadioButton, QButtonGroup)
 
 from backend import processor
 from backend.ocr_engine import orc_tesseract
+from backend.processor import dilate, erode
 from ui.models.image_store import ImageStore
 from ui.models.text_store import TextStore
 from utils.image_convert import qimage_to_cv, cv_to_qimage
@@ -282,6 +283,120 @@ class MedianFilterWidget(BaseFilterWidget):
         return img
 
 
+class DilationErosionFilterWidget(BaseFilterWidget):
+    def __init__(self):
+        super().__init__()
+        self.setLayout(QVBoxLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
+
+        self.checkbox = QCheckBox("Erode/dilate")
+        self.layout().addWidget(self.checkbox)
+
+        self.filter_cont = QFrame()
+        self.filter_cont.setLayout(QHBoxLayout())
+        self.filter_cont.layout().setContentsMargins(10, 0, 0, 0)
+        self.layout().addWidget(self.filter_cont)
+
+        self.radio_btn_cont = QFrame()
+        self.radio_btn_cont.setLayout(QVBoxLayout())
+        self.radio_btn_cont.layout().setContentsMargins(0, 0, 0, 0)
+        self.btn_group = QButtonGroup()
+        self.dilate_radio = QRadioButton("Dilate")
+        self.dilate_radio.setChecked(True)
+        self.dilate_radio.setEnabled(False)
+        self.btn_group.addButton(self.dilate_radio, 1)
+        self.radio_btn_cont.layout().addWidget(self.dilate_radio)
+        self.erode_radio = QRadioButton("Erode")
+        self.erode_radio.setEnabled(False)
+        self.btn_group.addButton(self.erode_radio, 2)
+        self.filter_cont.layout().addWidget(self.radio_btn_cont)
+        self.radio_btn_cont.layout().addWidget(self.erode_radio)
+
+        self.ksize_cont = QFrame()
+        self.ksize_cont.setLayout(QVBoxLayout())
+        self.ksize_cont.layout().setContentsMargins(0, 0, 0, 0)
+        self.ksize_label = QLabel("Ksize")
+        self.ksize_cont.layout().addWidget(self.ksize_label)
+        self.ksize_spinbox = QSpinBox()
+        self.ksize_spinbox.setEnabled(False)
+        self.ksize_spinbox.setMinimum(1)
+        self.ksize_spinbox.setMaximum(40)
+        self.ksize_spinbox.setValue(2)
+        self.ksize_cont.layout().addWidget(self.ksize_spinbox)
+        self.filter_cont.layout().addWidget(self.ksize_cont)
+
+        self.iter_cont = QFrame()
+        self.iter_cont.setLayout(QVBoxLayout())
+        self.iter_cont.layout().setContentsMargins(0, 0, 0, 0)
+        self.iter_label = QLabel("Iteration")
+        self.iter_cont.layout().addWidget(self.iter_label)
+        self.iter_spinbox = QSpinBox()
+        self.iter_spinbox.setEnabled(False)
+        self.iter_spinbox.setMinimum(1)
+        self.iter_spinbox.setMaximum(40)
+        self.iter_spinbox.setValue(1)
+        self.iter_cont.layout().addWidget(self.iter_spinbox)
+        self.filter_cont.layout().addWidget(self.iter_cont)
+
+        self.checkbox.toggled.connect(self._on_checkbox_toggled)
+        self.btn_group.buttonClicked.connect(self._on_radio_btn_clicked)
+        self.ksize_spinbox.valueChanged.connect(self._on_ksize_changed)
+        self.iter_spinbox.valueChanged.connect(self._on_iter_changed)
+
+    @Slot(bool)
+    def _on_checkbox_toggled(self, checked: bool):
+        self.dilate_radio.setEnabled(checked)
+        self.erode_radio.setEnabled(checked)
+        self.ksize_spinbox.setEnabled(checked)
+        self.iter_spinbox.setEnabled(checked)
+
+        self.paramsChanged.emit()
+
+    @Slot()
+    def _on_radio_btn_clicked(self):
+        self.paramsChanged.emit()
+
+    @Slot()
+    def _on_ksize_changed(self):
+        self.paramsChanged.emit()
+
+    @Slot()
+    def _on_iter_changed(self):
+        self.paramsChanged.emit()
+
+    def get_checked_radio_btn_id(self) -> int:
+        """Returns the checked and enabled radio button id."""
+        checked_btn = self.btn_group.checkedButton()
+        if checked_btn is not None and checked_btn.isEnabled():
+            return self.btn_group.id(checked_btn)
+        return -1
+
+    def get_params(self) -> dict:
+        return {
+            "enabled": self.dilate_radio.isEnabled() and self.erode_radio.isEnabled(),
+            "checked_btn": self.get_checked_radio_btn_id(),
+            "k_tuple": (self.ksize_spinbox.value(), self.ksize_spinbox.value()),
+            "iter": self.iter_spinbox.value()
+        }
+
+    def apply(self, img: np.ndarray) -> np.ndarray:
+        params = self.get_params()
+        if params["enabled"]:
+            if params["checked_btn"] == 1:
+                return dilate(img, params["k_tuple"], params["iter"])
+            elif params["checked_btn"] == 2:
+                return erode(img, params["k_tuple"], params["iter"])
+        return img
+
+    def reset(self):
+        self.dilate_radio.setEnabled(False)
+        self.erode_radio.setEnabled(False)
+        self.ksize_spinbox.setEnabled(False)
+        self.ksize_spinbox.setValue(2)
+        self.iter_spinbox.setEnabled(False)
+        self.iter_spinbox.setValue(1)
+
+
 # ============================================================================
 # Editor Container (Orchestrator)
 # ============================================================================
@@ -306,6 +421,7 @@ class EditorContainer(QFrame):
             InvertFilterWidget(),
             GaussianFilterWidget(),
             MedianFilterWidget(),
+            DilationErosionFilterWidget()
         ]
 
         # Add all filters to layout
@@ -316,7 +432,7 @@ class EditorContainer(QFrame):
         # Button to run OCR
         self.run_ocr_btn = QPushButton("Run OCR")
         self.layout().addWidget(self.run_ocr_btn)
-        self.run_ocr_btn.clicked.connect(self.ocr_worker)
+        self.run_ocr_btn.clicked.connect(self._ocr_worker)
 
         # Vertical spacer to push filters to top
         v_spacer = QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -362,11 +478,15 @@ class EditorContainer(QFrame):
     # OCR worker
     # ============================================================================
     @Slot()
-    def ocr_worker(self):
+    def _ocr_worker(self):
         """worker method to call and run ocr process in another thread"""
+        # Set wait cursor on main thread
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+
         worker = Worker(self.run_ocr)
         worker.signals.result.connect(self._on_ocr_successful)
         worker.signals.error.connect(self._on_ocr_error)
+        worker.signals.completed.connect(self._on_ocr_completed)
         self.threadpool.start(worker)
 
     def run_ocr(self) -> str | None:
@@ -376,12 +496,18 @@ class EditorContainer(QFrame):
         text = orc_tesseract(cv_img, lang="eng")
         return text
 
+    @Slot()
     def _on_ocr_successful(self, text: str):
         """Set the result text to textarea if ocr is completed"""
         self.text_store.set_text(text)
 
+    @Slot()
     def _on_ocr_error(self, error: tuple):
         """Show error dialog"""
         error_dialog = QErrorMessage(self)
-        err_message = str(error[1])
-        error_dialog.showMessage(err_message)
+        error_dialog.showMessage(str(error[1]))
+
+    @Slot()
+    def _on_ocr_completed(self):
+        """Restore cursor when OCR completes (called on main thread)"""
+        QApplication.restoreOverrideCursor()

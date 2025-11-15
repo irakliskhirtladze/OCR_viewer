@@ -1,8 +1,7 @@
 import sys
 import traceback
 
-from PySide6.QtCore import QObject, Signal, Slot, QRunnable, Qt
-from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QObject, Signal, Slot, QRunnable
 
 
 class WorkerSignals(QObject):
@@ -21,8 +20,6 @@ class Worker(QRunnable):
 
     @Slot()
     def run(self):
-        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-
         try:
             result = self.func(*self.args, **self.kwargs)
         except Exception:
@@ -32,5 +29,4 @@ class Worker(QRunnable):
         else:
             self.signals.result.emit(result)
         finally:
-            QApplication.restoreOverrideCursor()
             self.signals.completed.emit()

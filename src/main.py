@@ -15,5 +15,5 @@ if __name__ == '__main__':
     app.setStyleSheet(_qss)
 
     window = MainWindow()
-    window.show()
+    window.showMaximized()
     app.exec()

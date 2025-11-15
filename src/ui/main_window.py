@@ -13,7 +13,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("OCR Viewer")
         self.setMinimumSize(QSize(800, 600))
-        # self.showMaximized()
 
         # Create central widget with layout
         central_widget = QWidget()

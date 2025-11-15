@@ -16,22 +16,20 @@ if __name__ == '__main__':
     ninety = resource_path("data/90.png").as_posix()
 
     # OpenCV images
-    img = cv2.imread(ninety)
+    img = cv2.imread(image_file)
 
-    # processing
-    grey = to_gray(img)
-    unbordered = remove_borders(grey)
+    # # processing
+    # grey = to_gray(img)
+    # unbordered = remove_borders(grey)
+    #
+    # gaussian = gaussian_blur(unbordered, (19, 1))
+    #
+    # deskewed = auto_deskew(img)
+    # grey = to_gray(deskewed)
+    #
+    # im_bw = to_binary(grey, 210, 255)
+    # inverted = invert(im_bw)
 
-    gaussian = gaussian_blur(unbordered, (19, 1))
+    dilated = dilate(img, (3, 3), 1)
 
-    deskewed = auto_deskew(img)
-    grey = to_gray(deskewed)
-
-    im_bw = to_binary(grey, 210, 255)
-    inverted = invert(im_bw)
-
-    kernel = np.ones((1, 1), np.uint8)
-    dilated = dilate(inverted, kernel, 1)
-    inverted = invert(dilated)
-
-    Image.fromarray(deskewed).show()
+    Image.fromarray(dilated).show()
