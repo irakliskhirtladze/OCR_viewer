@@ -2,11 +2,12 @@ import numpy as np
 from PySide6.QtCore import Qt, Signal, Slot, QThreadPool, QRunnable
 from PySide6.QtGui import QImage
 from PySide6.QtWidgets import (QFrame, QHBoxLayout, QVBoxLayout, QCheckBox, QSpacerItem, QSizePolicy, QLabel, QSlider,
-                               QSpinBox, QPushButton, QErrorMessage, QApplication, QRadioButton, QButtonGroup)
+                               QSpinBox, QPushButton, QErrorMessage, QApplication, QRadioButton, QButtonGroup,
+                               QComboBox)
 
 from backend import processor
-from backend.ocr_engine import orc_tesseract
-from backend.processor import dilate, erode
+from backend.ocr_engine import orc_tesseract, ocr_easyocr
+from backend.processor import dilate, erode, bilateral_filter
 from ui.models.image_store import ImageStore
 from ui.models.ocr_store import OCRStore
 from utils.image_convert import qimage_to_cv, cv_to_qimage
@@ -183,30 +184,20 @@ class GaussianFilterWidget(BaseFilterWidget):
         self.ksize_label = QLabel("Ksize:")
         self.ksize_cont.layout().addWidget(self.ksize_label)
 
-        self.ksize_spinbox_1 = QSpinBox()
-        self.ksize_spinbox_1.setMinimum(1)
-        self.ksize_spinbox_1.setMaximum(39)
-        self.ksize_spinbox_1.setValue(3)
-        self.ksize_spinbox_1.setSingleStep(2)
-        self.ksize_spinbox_1.setEnabled(False)
-        self.ksize_cont.layout().addWidget(self.ksize_spinbox_1)
-
-        self.ksize_spinbox_2 = QSpinBox()
-        self.ksize_spinbox_2.setMinimum(1)
-        self.ksize_spinbox_2.setMaximum(39)
-        self.ksize_spinbox_2.setValue(3)
-        self.ksize_spinbox_2.setSingleStep(2)
-        self.ksize_spinbox_2.setEnabled(False)
-        self.ksize_cont.layout().addWidget(self.ksize_spinbox_2)
+        self.ksize_spinbox = QSpinBox()
+        self.ksize_spinbox.setMinimum(1)
+        self.ksize_spinbox.setMaximum(39)
+        self.ksize_spinbox.setValue(3)
+        self.ksize_spinbox.setSingleStep(2)
+        self.ksize_spinbox.setEnabled(False)
+        self.ksize_cont.layout().addWidget(self.ksize_spinbox)
 
         self.checkbox.toggled.connect(self._on_checkbox_toggled)
-        self.ksize_spinbox_1.valueChanged.connect(self._on_ksize_changed)
-        self.ksize_spinbox_2.valueChanged.connect(self._on_ksize_changed)
+        self.ksize_spinbox.valueChanged.connect(self._on_ksize_changed)
 
     @Slot(bool)
     def _on_checkbox_toggled(self, checked: bool):
-        self.ksize_spinbox_1.setEnabled(checked)
-        self.ksize_spinbox_2.setEnabled(checked)
+        self.ksize_spinbox.setEnabled(checked)
         self.paramsChanged.emit()
 
     @Slot()
@@ -216,12 +207,11 @@ class GaussianFilterWidget(BaseFilterWidget):
 
     def get_params(self) -> dict:
         return {"enabled": self.checkbox.isChecked(),
-                "k_tuple": (self.ksize_spinbox_1.value(), self.ksize_spinbox_2.value())}
+                "k_tuple": (self.ksize_spinbox.value(), self.ksize_spinbox.value())}
 
     def reset(self):
         self.checkbox.setChecked(False)
-        self.ksize_spinbox_1.setValue(3)
-        self.ksize_spinbox_2.setValue(3)
+        self.ksize_spinbox.setValue(3)
 
     def apply(self, img: np.ndarray) -> np.ndarray:
         params = self.get_params()
@@ -281,6 +271,108 @@ class MedianFilterWidget(BaseFilterWidget):
         if params["enabled"]:
             return processor.median_blur(img, params["ksize"])
         return img
+
+
+class BilateralFilterWidget(BaseFilterWidget):
+    def __init__(self):
+        super().__init__()
+        self.setLayout(QVBoxLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
+
+        self.checkbox = QCheckBox("Bilateral filter")
+        self.layout().addWidget(self.checkbox)
+
+        self.filters_cont = QFrame()
+        self.filters_cont.setLayout(QHBoxLayout())
+        self.filters_cont.layout().setContentsMargins(10, 0, 0, 0)
+        self.layout().addWidget(self.filters_cont)
+
+        # D
+        self.d_cont = QFrame()
+        self.layout().addWidget(self.d_cont)
+        self.d_cont.setLayout(QHBoxLayout())
+        self.d_cont.layout().setContentsMargins(10, 0, 0, 0)
+        self.d_label = QLabel('D')
+        self.d_cont.layout().addWidget(self.d_label)
+        self.d_spinbox = QSpinBox()
+        self.d_spinbox.setEnabled(False)
+        self.d_spinbox.setMinimum(1)
+        self.d_spinbox.setMaximum(12)
+        self.d_spinbox.setValue(3)
+        self.d_cont.layout().addWidget(self.d_spinbox)
+
+        # sigma color
+        self.sigma_col_cont = QFrame()
+        self.layout().addWidget(self.sigma_col_cont)
+        self.sigma_col_cont.setLayout(QHBoxLayout())
+        self.sigma_col_cont.layout().setContentsMargins(10, 0, 0, 0)
+        self.sigma_col_label = QLabel("Sigma color")
+        self.sigma_col_cont.layout().addWidget(self.sigma_col_label)
+        self.sigma_col_spinbox = QSpinBox()
+        self.sigma_col_cont.layout().addWidget(self.sigma_col_spinbox)
+        self.sigma_col_spinbox.setEnabled(False)
+        self.sigma_col_spinbox.setMinimum(1)
+        self.sigma_col_spinbox.setMaximum(300)
+        self.sigma_col_spinbox.setValue(75)
+
+        # sigma space
+        self.sigma_space_cont = QFrame()
+        self.layout().addWidget(self.sigma_space_cont)
+        self.sigma_space_cont.setLayout(QHBoxLayout())
+        self.sigma_space_cont.layout().setContentsMargins(10, 0, 0, 0)
+        self.sigma_space_lbl = QLabel("Sigma space")
+        self.sigma_space_cont.layout().addWidget(self.sigma_space_lbl)
+        self.sigma_space_spinbox = QSpinBox()
+        self.sigma_space_cont.layout().addWidget(self.sigma_space_spinbox)
+        self.sigma_space_spinbox.setEnabled(False)
+        self.sigma_space_spinbox.setMinimum(1)
+        self.sigma_space_spinbox.setMaximum(300)
+        self.sigma_space_spinbox.setValue(75)
+
+        self.checkbox.toggled.connect(self._on_checkbox_toggled)
+        self.d_spinbox.valueChanged.connect(self._on_d_changed)
+        self.sigma_col_spinbox.valueChanged.connect(self._on_sigma_col_changed)
+        self.sigma_space_spinbox.valueChanged.connect(self._on_sigma_space_changed)
+
+    @Slot(bool)
+    def _on_checkbox_toggled(self, checked: bool):
+        self.d_spinbox.setEnabled(checked)
+        self.sigma_col_spinbox.setEnabled(checked)
+        self.sigma_space_spinbox.setEnabled(checked)
+
+        self.paramsChanged.emit()
+
+    @Slot()
+    def _on_d_changed(self):
+        self.paramsChanged.emit()
+
+    @Slot()
+    def _on_sigma_col_changed(self):
+        self.paramsChanged.emit()
+
+    @Slot()
+    def _on_sigma_space_changed(self):
+        self.paramsChanged.emit()
+
+    def get_params(self) -> dict:
+        return {"enabled": self.checkbox.isChecked(),
+                "d": self.d_spinbox.value(),
+                "sigma_color": self.sigma_col_spinbox.value(),
+                "sigma_space": self.sigma_space_spinbox.value()}
+
+    def apply(self, img: np.ndarray) -> np.ndarray:
+        params = self.get_params()
+        if params["enabled"]:
+            return bilateral_filter(img, params["d"], params["sigma_color"], params["sigma_space"])
+        return img
+
+    def reset(self):
+        self.d_spinbox.setEnabled(False)
+        self.d_spinbox.setValue(3)
+        self.sigma_col_spinbox.setEnabled(False)
+        self.sigma_col_spinbox.setValue(75)
+        self.sigma_space_spinbox.setEnabled(False)
+        self.sigma_space_spinbox.setValue(75)
 
 
 class DilationErosionFilterWidget(BaseFilterWidget):
@@ -406,7 +498,7 @@ class EditorContainer(QFrame):
     def __init__(self, image_store: ImageStore, ocr_store: OCRStore):
         super().__init__()
         self.setLayout(QVBoxLayout())
-        self.layout().setSpacing(20)
+        self.layout().setSpacing(40)
 
         self.image_store = image_store
         self.original_cv_img = None  # OpenCV version of original image
@@ -421,6 +513,7 @@ class EditorContainer(QFrame):
             InvertFilterWidget(),
             GaussianFilterWidget(),
             MedianFilterWidget(),
+            BilateralFilterWidget(),
             DilationErosionFilterWidget()
         ]
 
@@ -429,14 +522,24 @@ class EditorContainer(QFrame):
             self.layout().addWidget(filter_widget)
             filter_widget.paramsChanged.connect(self.on_params_changed)
 
+        # Vertical spacer to push filters to top
+        v_spacer = QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.layout().addItem(v_spacer)
+
+        # Option to select ocr engine
+        self.ocr_engine_lbl = QLabel("Choose OCR engine")
+        self.ocr_engine_combo = QComboBox()
+        self.ocr_engine_combo.addItems(["Tesseract", "EasyOCR"])
+        self.ocr_engine_cont = QFrame()
+        self.ocr_engine_cont.setLayout(QHBoxLayout())
+        self.ocr_engine_cont.layout().addWidget(self.ocr_engine_lbl)
+        self.ocr_engine_cont.layout().addWidget(self.ocr_engine_combo)
+        self.layout().addWidget(self.ocr_engine_cont)
+
         # Button to run OCR
         self.run_ocr_btn = QPushButton("Run OCR")
         self.layout().addWidget(self.run_ocr_btn)
         self.run_ocr_btn.clicked.connect(self._ocr_worker)
-
-        # Vertical spacer to push filters to top
-        v_spacer = QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        self.layout().addItem(v_spacer)
 
         # set up threadpool to run ocr in separate thread
         self.threadpool = QThreadPool()
@@ -447,7 +550,6 @@ class EditorContainer(QFrame):
     def on_original_image_changed(self, qimg: QImage, path: str):
         """Store the original image when it changes"""
         self.original_cv_img = qimage_to_cv(qimg)
-        # Reset all filters
         self.reset_all_filters()
         # Initialize edited image with original
         self.image_store.set_edited_img(qimg)
@@ -493,8 +595,12 @@ class EditorContainer(QFrame):
         """Run the OCR on img"""
         edited_img = self.image_store.get_edited_img()
         cv_img = qimage_to_cv(edited_img)
-        text = orc_tesseract(cv_img, lang="eng")
-        return text
+        ocr_engine = self.ocr_engine_combo.currentText()
+        if ocr_engine == "Tesseract":
+            ocr_result = str(orc_tesseract(cv_img, lang="eng"))
+        elif ocr_engine == "EasyOCR":
+            ocr_result = str(ocr_easyocr(cv_img, lang="en"))
+        return ocr_result
 
     @Slot()
     def _on_ocr_successful(self, text: str):
