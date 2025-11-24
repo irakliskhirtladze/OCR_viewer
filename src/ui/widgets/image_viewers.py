@@ -1,8 +1,9 @@
-from PySide6.QtGui import QPixmap, QImage
-from PySide6.QtWidgets import QFrame, QVBoxLayout, QPushButton, QLabel, QHBoxLayout, QSpacerItem, QSizePolicy
-from PySide6.QtCore import QEvent, Slot, Qt
+from PySide6.QtGui import QPixmap, QImage, QPainter, QColor, QPen, QFont
+from PySide6.QtWidgets import QFrame, QVBoxLayout, QPushButton, QLabel, QHBoxLayout, QSpacerItem, QSizePolicy, QWidget
+from PySide6.QtCore import QEvent, Slot, Qt, QRect
 
 from ui.models.image_store import ImageStore
+from ui.models.ocr_store import OCRStore
 from ui.widgets.custom_image_viewer import ImageViewer
 from utils.file_utils import open_file_dialog
 
@@ -12,49 +13,49 @@ class OriginalImageViewer(QFrame):
         super().__init__()
         self.setLayout(QVBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
-        
+
         self.image_store = image_store
-        
+
         # Listen to image store changes
         self.image_store.imageChanged.connect(self.on_image_changed)
-        
+
         # Top button bar
         self._create_button_bar()
-        
+
         # Image viewer
         self.image_viewer = ImageViewer(self)
         self.layout().addWidget(self.image_viewer)
-        
+
         # Enable drag and drop
         self.image_viewer.setAcceptDrops(True)
         self.image_viewer.installEventFilter(self)
-    
+
     def _create_button_bar(self):
         """Create the top button bar with file chooser."""
         btn_cont = QFrame()
         btn_cont.setFixedHeight(50)
         btn_cont.setLayout(QHBoxLayout())
-        
+
         # Choose image button
         choose_btn = QPushButton("Choose image")
         choose_btn.setCursor(Qt.PointingHandCursor)
         choose_btn.clicked.connect(self.on_choose_image)
         btn_cont.layout().addWidget(choose_btn)
-        
+
         # Instruction label
         label = QLabel("Or drag and drop an image file below")
         btn_cont.layout().addWidget(label)
-        
+
         # Spacer
         spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
         btn_cont.layout().addItem(spacer)
-        
+
         self.layout().addWidget(btn_cont)
-    
+
     # ========================================================================
     # File Loading
     # ========================================================================
-    
+
     @Slot()
     def on_choose_image(self):
         """Open file dialog to choose an image."""
@@ -63,32 +64,32 @@ class OriginalImageViewer(QFrame):
             caption="Choose Image",
             filter_str="Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.tiff)"
         )
-        
+
         if file_path:
             self._load_image(file_path)
-    
+
     def _load_image(self, file_path: str):
         """Load image from file and publish to store."""
         pixmap = QPixmap(file_path)
         if not pixmap.isNull():
             # Display in viewer
             self.image_viewer.load_pixmap(pixmap)
-            
+
             # Publish to store (so other widgets can see it)
             qimage = pixmap.toImage()
             self.image_store.set_original_img(qimage, file_path)
             self.image_store.set_edited_img(qimage)
-    
+
     @Slot(QImage, str)
     def on_image_changed(self, qimg: QImage, path: str):
         """Handle image change from store."""
         pixmap = QPixmap.fromImage(qimg)
         self.image_viewer.load_pixmap(pixmap)
-    
+
     # ========================================================================
     # Drag and Drop
     # ========================================================================
-    
+
     def eventFilter(self, obj, event):
         """Handle drag and drop events."""
         if obj == self.image_viewer:
@@ -96,7 +97,7 @@ class OriginalImageViewer(QFrame):
                 if event.mimeData().hasUrls():
                     event.acceptProposedAction()
                 return True
-            
+
             elif event.type() == QEvent.Drop:
                 urls = event.mimeData().urls()
                 if urls and event.mimeData().hasUrls():
@@ -107,31 +108,139 @@ class OriginalImageViewer(QFrame):
                         event.acceptProposedAction()
                         return True
                 return True
-        
+
         return super().eventFilter(obj, event)
 
 
 class EditedImageViewer(QFrame):
-    def __init__(self, image_store: ImageStore):
+    def __init__(self, image_store: ImageStore, ocr_store: OCRStore):
         super().__init__()
         self.setLayout(QHBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
 
         self.image_store = image_store
+        self.ocr_store = ocr_store
 
-        # Store original pixmap for scaling
-        self.original_pixmap = None
-
-        # when edited image changes anywhere, show it here as the right panel
-        self.image_store.editedImageChanged.connect(self.show_image)
-
-        # Image viewer widget
+        # Image viewer widget (underlying layer)
         self.image_viewer = ImageViewer()
         self.layout().addWidget(self.image_viewer)
 
+        # Bounding box overlay (top layer) - child of image_viewer
+        self.bbox_overlay = BoundingBoxOverlay(self.image_viewer, self.image_viewer)
+        self.bbox_overlay.setGeometry(self.image_viewer.geometry())
+        self.bbox_overlay.show()  # Make overlay visible
+        self.bbox_overlay.raise_()  # Bring to front
+
+        # Connect signals
+        self.image_store.editedImageChanged.connect(self._on_edited_image_changed)
+        self.ocr_store.result_changed.connect(self._on_ocr_changed)
+
+        # Keep overlay synchronized with image viewer
+        self.image_viewer.installEventFilter(self)
+
+    def eventFilter(self, obj, event):
+        """Keep overlay synchronized with image viewer transformations."""
+        if obj == self.image_viewer:
+            if event.type() == QEvent.Resize:
+                # Update overlay size and trigger repaint
+                self.bbox_overlay.setGeometry(self.image_viewer.geometry())
+                self.bbox_overlay.update()
+        return super().eventFilter(obj, event)
+
     @Slot(QImage)
-    def show_image(self, qimg: QImage):
-        """Set image on the custom image viewer."""
+    def _on_edited_image_changed(self, qimg: QImage):
+        """Update image viewer when edited image changes."""
         if qimg is not None and not qimg.isNull():
-            self.original_pixmap = QPixmap.fromImage(qimg)
-            self.image_viewer.load_pixmap(self.original_pixmap)
+            pixmap = QPixmap.fromImage(qimg)
+            self.image_viewer.load_pixmap(pixmap)
+            # Trigger overlay repaint
+            self.bbox_overlay.update()
+            # Clear old bounding boxes since image changed
+            self.bbox_overlay.clear_boxes()
+
+    @Slot(list)
+    def _on_ocr_changed(self, result: list):
+        """Update bounding boxes when OCR results change."""
+        self.bbox_overlay.set_boxes(result)
+
+
+class BoundingBoxOverlay(QWidget):
+    """Transparent overlay for bounding boxes on top of edited image viewer."""
+
+    def __init__(self, image_viewer: ImageViewer, parent=None):
+        super().__init__(parent)
+        self.image_viewer = image_viewer
+        self.boxes = []
+
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.setAttribute(Qt.WA_NoSystemBackground)
+        self.setStyleSheet("background: transparent;")
+
+    def set_boxes(self, boxes: list):
+        self.boxes = boxes
+        self.update()
+
+    def clear_boxes(self):
+        self.boxes = []
+        self.update()
+
+    def paintEvent(self, event):
+        if not self.boxes or not self.image_viewer.pixmap or not self.image_viewer.original_pixmap:
+            return
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        # Calculate image position and scaling
+        img_x = (self.image_viewer.width() - self.image_viewer.pixmap.width()) // 2 + self.image_viewer.pan_offset.x()
+        img_y = (self.image_viewer.height() - self.image_viewer.pixmap.height()) // 2 + self.image_viewer.pan_offset.y()
+        
+        scale_x = self.image_viewer.pixmap.width() / self.image_viewer.original_pixmap.width()
+        scale_y = self.image_viewer.pixmap.height() / self.image_viewer.original_pixmap.height()
+        
+        # Set up pen for drawing boxes
+        pen = QPen(QColor(0, 255, 0), 2)  # Green, 2px
+        painter.setPen(pen)
+        
+        # Set up font for confidence labels
+        font = QFont("Arial", 10, QFont.Bold)
+        painter.setFont(font)
+
+        for box in self.boxes:
+            # Get original coordinates
+            left = box['left']
+            top = box['top']
+            width = box['width']
+            height = box['height']
+            confidence = box['conf']
+            
+            # Scale to displayed size
+            scaled_left = int(left * scale_x)
+            scaled_top = int(top * scale_y)
+            scaled_width = int(width * scale_x)
+            scaled_height = int(height * scale_y)
+            
+            # Translate to widget position
+            box_x = img_x + scaled_left
+            box_y = img_y + scaled_top
+            
+            # Draw rectangle
+            rect = QRect(box_x, box_y, scaled_width, scaled_height)
+            painter.drawRect(rect)
+            
+            # Draw confidence label
+            conf_text = f"{confidence:.0f}%"
+            text_rect = painter.fontMetrics().boundingRect(conf_text)
+            
+            # Position label above box (or inside if too close to top)
+            label_x = box_x
+            label_y = box_y - text_rect.height() - 2 if box_y > text_rect.height() + 2 else box_y + 2
+            
+            # Draw background for text
+            bg_rect = QRect(label_x, label_y, text_rect.width() + 4, text_rect.height() + 2)
+            painter.fillRect(bg_rect, QColor(0, 0, 0, 180))
+            
+            # Draw text
+            painter.setPen(QColor(255, 255, 255))  # White text
+            painter.drawText(label_x + 2, label_y + text_rect.height(), conf_text)
+            painter.setPen(pen)  # Restore pen for next box

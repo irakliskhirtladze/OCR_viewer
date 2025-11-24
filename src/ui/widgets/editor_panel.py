@@ -481,6 +481,7 @@ class DilationErosionFilterWidget(BaseFilterWidget):
         return img
 
     def reset(self):
+        self.checkbox.setChecked(False)
         self.dilate_radio.setEnabled(False)
         self.erode_radio.setEnabled(False)
         self.ksize_spinbox.setEnabled(False)
@@ -513,7 +514,7 @@ class EditorContainer(QFrame):
             InvertFilterWidget(),
             GaussianFilterWidget(),
             MedianFilterWidget(),
-            BilateralFilterWidget(),
+            # BilateralFilterWidget(),
             DilationErosionFilterWidget()
         ]
 
@@ -591,21 +592,25 @@ class EditorContainer(QFrame):
         worker.signals.completed.connect(self._on_ocr_completed)
         self.threadpool.start(worker)
 
-    def run_ocr(self) -> str | None:
+    def run_ocr(self) -> list[dict] | None:
         """Run the OCR on img"""
         edited_img = self.image_store.get_edited_img()
         cv_img = qimage_to_cv(edited_img)
         ocr_engine = self.ocr_engine_combo.currentText()
+
         if ocr_engine == "Tesseract":
-            ocr_result = str(orc_tesseract(cv_img, lang="eng"))
-        elif ocr_engine == "EasyOCR":
-            ocr_result = str(ocr_easyocr(cv_img, lang="en"))
+            ocr_result = orc_tesseract(cv_img, lang="kat")
+            print(ocr_result)
+
+        # elif ocr_engine == "EasyOCR":
+        #     ocr_result = ocr_easyocr(cv_img, lang="en")
+
         return ocr_result
 
     @Slot()
-    def _on_ocr_successful(self, text: str):
+    def _on_ocr_successful(self, result: list[dict] | None) -> None:
         """Set the result text to textarea if ocr is completed"""
-        self.ocr_store.set_text(text)
+        self.ocr_store.set_result(result)
 
     @Slot()
     def _on_ocr_error(self, error: tuple):

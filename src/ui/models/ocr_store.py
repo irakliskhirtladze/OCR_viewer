@@ -2,30 +2,19 @@ from PySide6.QtCore import Signal, QObject, QRect
 
 
 class OCRStore(QObject):
-    text_changed = Signal(str)
-    bounding_boxes_changed = Signal(QRect)
-    confidence_scores_changed = Signal(QRect)
+    result_changed = Signal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._text = None
-        self._bounding_boxes = None
+        self._result: list[dict] | None = None
 
-    def get_text(self) -> str | None:
+    def get_result(self) -> list[dict] | None:
         """returns current text from store instance"""
-        return self._text
+        return self._result
 
-    def set_text(self, text: str) -> None:
+    def set_result(self, result: list[dict]) -> None:
         """Sets current text to store instance"""
-        self._text = text
-        self.text_changed.emit(text)
-
-    def get_bounding_boxes(self) -> tuple[int, int, int, int]:
-        """returns bounding box of current text"""
-        return self._bounding_boxes
-
-    def set_bounding_boxes(self, bounding_boxes: tuple[int, int, int, int]) -> None:
-        """sets bounding box of current text"""
-        self._bounding_boxes = bounding_boxes
+        self._result = result
+        self.result_changed.emit(result)
 
 

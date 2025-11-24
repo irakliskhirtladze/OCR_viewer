@@ -46,4 +46,4 @@ class MainWindow(QMainWindow):
         self.right_container.layout().setContentsMargins(0, 0, 0, 0)
 
         self.right_container.layout().addWidget(EditorContainer(self.image_store, self.ocr_store), 1)
-        self.right_container.layout().addWidget(EditedImageViewer(self.image_store), 2)
+        self.right_container.layout().addWidget(EditedImageViewer(self.image_store, self.ocr_store), 2)
