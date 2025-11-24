@@ -9,19 +9,15 @@ class ImageStore(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._img = QImage()
-        self._path = ""
         self._edited_img = QImage()
 
     # original
-    def set_original_img(self, img: QImage, path: str):
-        self._img, self._path = img, path
-        self.imageChanged.emit(self._img, self._path)
+    def set_original_img(self, img: QImage):
+        self._img = img
+        self.imageChanged.emit(self._img)
 
     def get_original_img(self) -> QImage:
         return self._img
-
-    def get_path(self) -> str:
-        return self._path
 
     # editor preview
     def set_edited_img(self, img: QImage):

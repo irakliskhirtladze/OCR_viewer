@@ -1,6 +1,9 @@
 from PySide6.QtGui import QPixmap, QImage, QPainter, QColor, QPen, QFont
-from PySide6.QtWidgets import QFrame, QVBoxLayout, QPushButton, QLabel, QHBoxLayout, QSpacerItem, QSizePolicy, QWidget
+from PySide6.QtWidgets import QFrame, QVBoxLayout, QPushButton, QLabel, QHBoxLayout, QSpacerItem, QSizePolicy, QWidget, \
+    QScrollBar, QScrollArea
 from PySide6.QtCore import QEvent, Slot, Qt, QRect
+
+import fitz
 
 from ui.models.image_store import ImageStore
 from ui.models.ocr_store import OCRStore
@@ -14,6 +17,8 @@ class OriginalImageViewer(QFrame):
         self.setLayout(QVBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
 
+        self.images: list[QImage] = []
+
         self.image_store = image_store
 
         # Listen to image store changes
@@ -21,6 +26,13 @@ class OriginalImageViewer(QFrame):
 
         # Top button bar
         self._create_button_bar()
+
+        # Image scrollarea
+        self.img_scrollarea = QScrollArea()
+        self.layout().addWidget(self.img_scrollarea)
+        self.img_scrollarea.setFixedHeight(100)
+        self.scrollable_cont = QWidget()
+        self.scrollable_layout = QHBoxLayout()
 
         # Image viewer
         self.image_viewer = ImageViewer(self)
@@ -39,7 +51,7 @@ class OriginalImageViewer(QFrame):
         # Choose image button
         choose_btn = QPushButton("Choose image")
         choose_btn.setCursor(Qt.PointingHandCursor)
-        choose_btn.clicked.connect(self.on_choose_image)
+        choose_btn.clicked.connect(self.on_choose_files)
         btn_cont.layout().addWidget(choose_btn)
 
         # Instruction label
@@ -55,29 +67,54 @@ class OriginalImageViewer(QFrame):
     # ========================================================================
     # File Loading
     # ========================================================================
-
     @Slot()
-    def on_choose_image(self):
+    def on_choose_files(self):
         """Open file dialog to choose an image."""
-        file_path = open_file_dialog(
+        file_paths = open_file_dialog(
             parent=self,
-            caption="Choose Image",
-            filter_str="Image Files (*.png *.jpg *.jpeg *.bmp *.gif *.tiff)"
+            caption="Choose Images or PDF",
+            filter_str="Files (*.png *.jpg *.jpeg *.pdf)",
+            multi=True
         )
 
-        if file_path:
-            self._load_image(file_path)
+        if file_paths:
+            self._load_files(file_paths)
 
-    def _load_image(self, file_path: str):
+    def _load_files(self, file_paths: list):
+        """Load images and add to scroll area."""
+        for file_path in file_paths:
+            if file_path.lower().endswith((".png", ".jpg", ".jpeg")):
+                self.images.append(QImage(file_path))
+            elif file_path.lower().endswith(".pdf"):
+                doc = fitz.open(file_path)
+                for page_num in range(len(doc)):
+                    page = doc.load_page(page_num)
+                    pix = page.get_pixmap(alpha=False)
+                    qimage = QImage(
+                        pix.samples,
+                        pix.width,
+                        pix.height,
+                        pix.stride,
+                        QImage.Format.Format_RGB888
+                    )
+                    self.images.append(qimage)
+
+        for qimage in self.images:
+            img_lbl = QLabel()
+            img_lbl.setFixedWidth(100)
+            img_lbl.setPixmap(qimage)
+            self.scrollable_layout.addWidget(img_lbl)
+
+    def _load_image(self, image: QImage):
         """Load image from file and publish to store."""
-        pixmap = QPixmap(file_path)
+        pixmap = QPixmap(image)
         if not pixmap.isNull():
             # Display in viewer
             self.image_viewer.load_pixmap(pixmap)
 
             # Publish to store (so other widgets can see it)
             qimage = pixmap.toImage()
-            self.image_store.set_original_img(qimage, file_path)
+            self.image_store.set_original_img(qimage)
             self.image_store.set_edited_img(qimage)
 
     @Slot(QImage, str)
