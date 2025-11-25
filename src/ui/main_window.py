@@ -1,5 +1,5 @@
 from PySide6.QtCore import QSize
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QFrame
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QFrame, QSizePolicy
 
 from ui.models.image_store import ImageStore
 from ui.models.ocr_store import OCRStore
@@ -32,10 +32,12 @@ class MainWindow(QMainWindow):
         self.left_container.layout().setContentsMargins(0, 0, 0, 0)
 
         self.original_image_viewer = OriginalImageViewer(self.image_store)
-        self.left_container.layout().addWidget(self.original_image_viewer, 2)
+        self.original_image_viewer.setStyleSheet("background-color: green")
+        self.original_image_viewer.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        self.left_container.layout().addWidget(self.original_image_viewer)
 
         self.text_viewer = TextViewerWidget(self.ocr_store)
-        self.left_container.layout().addWidget(self.text_viewer, 1)
+        self.left_container.layout().addWidget(self.text_viewer)
 
         # ========================================================================
         # right container

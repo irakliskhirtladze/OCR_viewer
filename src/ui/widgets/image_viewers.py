@@ -1,6 +1,6 @@
-from PySide6.QtGui import QPixmap, QImage, QPainter, QColor, QPen, QFont
+from PySide6.QtGui import QPixmap, QImage, QPainter, QColor, QPen, QFont, QWheelEvent
 from PySide6.QtWidgets import QFrame, QVBoxLayout, QPushButton, QLabel, QHBoxLayout, QSpacerItem, QSizePolicy, QWidget, \
-    QScrollBar, QScrollArea
+    QScrollBar, QScrollArea, QErrorMessage
 from PySide6.QtCore import QEvent, Slot, Qt, QRect
 
 import fitz
@@ -10,6 +10,45 @@ from ui.models.ocr_store import OCRStore
 from ui.widgets.custom_image_viewer import ImageViewer
 from utils.file_utils import open_file_dialog
 
+from ui.models.image_store import ImageItem
+
+
+class HorizontalThumbnailScrollArea(QScrollArea):
+    def __init__(self):
+        super().__init__()
+        self.setWidgetResizable(True)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+    def wheelEvent(self, event: QWheelEvent):
+        """
+        Convert vertical wheel movement into horizontal scrolling.
+        """
+        delta_y = event.angleDelta().y()
+        if delta_y != 0:
+            bar: QScrollBar = self.horizontalScrollBar()
+            # adjust this factor if it feels too fast/slow
+            bar.setValue(bar.value() - delta_y)
+            event.accept()
+        else:
+            super().wheelEvent(event)
+
+    def resizeEvent(self, event):
+        """
+        Keep thumbnail labels' height = viewport height minus scrollbar height.
+        """
+        super().resizeEvent(event)
+
+        viewport_h = self.viewport().height()
+
+        w = self.widget()
+        if not w:
+            return
+
+        # adjust direct child QLabel thumbnail heights
+        for child in w.findChildren(QLabel, options=Qt.FindDirectChildrenOnly):
+            child.setFixedHeight(max(1, viewport_h))
+
 
 class OriginalImageViewer(QFrame):
     def __init__(self, image_store: ImageStore):
@@ -17,50 +56,49 @@ class OriginalImageViewer(QFrame):
         self.setLayout(QVBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
 
-        self.images: list[QImage] = []
-
         self.image_store = image_store
 
         # Listen to image store changes
-        self.image_store.imageChanged.connect(self.on_image_changed)
+        self.image_store.imagesChanged.connect(self.on_images_changed)
 
         # Top button bar
         self._create_button_bar()
 
-        # Image scrollarea
-        self.img_scrollarea = QScrollArea()
-        self.layout().addWidget(self.img_scrollarea)
-        self.img_scrollarea.setFixedHeight(100)
-        self.scrollable_cont = QWidget()
-        self.scrollable_layout = QHBoxLayout()
+        # Horizontal scroll area for thumbnails
+        self.thumb_scroll = HorizontalThumbnailScrollArea()
+        self.thumb_scroll.setStyleSheet("background-color: grey")
+        self.thumb_scroll.setFixedHeight(100)
+        self.layout().addWidget(self.thumb_scroll)
 
-        # Image viewer
-        self.image_viewer = ImageViewer(self)
-        self.layout().addWidget(self.image_viewer)
+        self.thumb_container = QWidget()
+        self.thumb_layout = QHBoxLayout(self.thumb_container)
+        self.thumb_layout.setContentsMargins(0, 0, 0, 0)
+        self.thumb_layout.setSpacing(4)
 
-        # Enable drag and drop
-        self.image_viewer.setAcceptDrops(True)
-        self.image_viewer.installEventFilter(self)
+        self.thumb_scroll.setWidget(self.thumb_container)
 
     def _create_button_bar(self):
         """Create the top button bar with file chooser."""
         btn_cont = QFrame()
+        btn_cont.setStyleSheet("background-color: grey")
         btn_cont.setFixedHeight(50)
         btn_cont.setLayout(QHBoxLayout())
 
         # Choose image button
-        choose_btn = QPushButton("Choose image")
+        choose_btn = QPushButton("Choose files")
+        btn_cont.layout().addWidget(choose_btn)
         choose_btn.setCursor(Qt.PointingHandCursor)
         choose_btn.clicked.connect(self.on_choose_files)
-        btn_cont.layout().addWidget(choose_btn)
-
-        # Instruction label
-        label = QLabel("Or drag and drop an image file below")
-        btn_cont.layout().addWidget(label)
 
         # Spacer
         spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
         btn_cont.layout().addItem(spacer)
+
+        # clear all button
+        clear_all_btn = QPushButton("Clear all")
+        btn_cont.layout().addWidget(clear_all_btn)
+        clear_all_btn.setCursor(Qt.PointingHandCursor)
+        clear_all_btn.clicked.connect(self.on_clear_all)
 
         self.layout().addWidget(btn_cont)
 
@@ -82,9 +120,12 @@ class OriginalImageViewer(QFrame):
 
     def _load_files(self, file_paths: list):
         """Load images and add to scroll area."""
+        image_list = []
         for file_path in file_paths:
             if file_path.lower().endswith((".png", ".jpg", ".jpeg")):
-                self.images.append(QImage(file_path))
+                img_item = ImageItem(QImage(file_path), file_path)
+                image_list.append(img_item)
+
             elif file_path.lower().endswith(".pdf"):
                 doc = fitz.open(file_path)
                 for page_num in range(len(doc)):
@@ -96,57 +137,39 @@ class OriginalImageViewer(QFrame):
                         pix.height,
                         pix.stride,
                         QImage.Format.Format_RGB888
-                    )
-                    self.images.append(qimage)
+                    ).copy()
+                    img_item = ImageItem(qimage, file_path, page_num)
+                    image_list.append(img_item)
 
-        for qimage in self.images:
-            img_lbl = QLabel()
-            img_lbl.setFixedWidth(100)
-            img_lbl.setPixmap(qimage)
-            self.scrollable_layout.addWidget(img_lbl)
+        self.image_store.add_img_items(image_list)
 
-    def _load_image(self, image: QImage):
-        """Load image from file and publish to store."""
-        pixmap = QPixmap(image)
-        if not pixmap.isNull():
-            # Display in viewer
-            self.image_viewer.load_pixmap(pixmap)
+    @Slot(list)
+    def on_images_changed(self, images: list[ImageItem]):
+        while self.thumb_layout.count():
+            item = self.thumb_layout.takeAt(0)
+            w = item.widget()
+            if w is not None:
+                w.deleteLater()
 
-            # Publish to store (so other widgets can see it)
-            qimage = pixmap.toImage()
-            self.image_store.set_original_img(qimage)
-            self.image_store.set_edited_img(qimage)
+        for img in images:
+            label = QLabel()
+            label.setFixedWidth(100)
+            label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+            qimg = img.image
+            pixmap = QPixmap.fromImage(qimg)
+            pixmap = pixmap.scaled(
+                label.size(),
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation
+            )
+            label.setPixmap(pixmap)
+            self.thumb_layout.addWidget(label)
 
-    @Slot(QImage, str)
-    def on_image_changed(self, qimg: QImage, path: str):
-        """Handle image change from store."""
-        pixmap = QPixmap.fromImage(qimg)
-        self.image_viewer.load_pixmap(pixmap)
+        print(self.image_store.get_images())
 
-    # ========================================================================
-    # Drag and Drop
-    # ========================================================================
-
-    def eventFilter(self, obj, event):
-        """Handle drag and drop events."""
-        if obj == self.image_viewer:
-            if event.type() in (QEvent.DragEnter, QEvent.DragMove):
-                if event.mimeData().hasUrls():
-                    event.acceptProposedAction()
-                return True
-
-            elif event.type() == QEvent.Drop:
-                urls = event.mimeData().urls()
-                if urls and event.mimeData().hasUrls():
-                    file_path = urls[0].toLocalFile()
-                    # Validate it's an image
-                    if file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff')):
-                        self._load_image(file_path)
-                        event.acceptProposedAction()
-                        return True
-                return True
-
-        return super().eventFilter(obj, event)
+    @Slot()
+    def on_clear_all(self):
+        self.image_store.clear_images()
 
 
 class EditedImageViewer(QFrame):
