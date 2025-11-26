@@ -151,10 +151,14 @@ class OriginalImageViewer(QFrame):
             if w is not None:
                 w.deleteLater()
 
+        viewport_h = self.thumb_scroll.viewport().height()
+
         for img in images:
             label = QLabel()
-            label.setFixedWidth(100)
-            label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+            self.thumb_layout.addWidget(label)
+            label.setFixedSize(100, viewport_h)
+            label.setStyleSheet("background-color: red")
+            label.setAlignment(Qt.AlignCenter)
             qimg = img.image
             pixmap = QPixmap.fromImage(qimg)
             pixmap = pixmap.scaled(
@@ -163,7 +167,6 @@ class OriginalImageViewer(QFrame):
                 Qt.SmoothTransformation
             )
             label.setPixmap(pixmap)
-            self.thumb_layout.addWidget(label)
 
         print(self.image_store.get_images())
 
