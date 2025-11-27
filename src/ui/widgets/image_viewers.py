@@ -1,7 +1,7 @@
 from PySide6.QtGui import QPixmap, QImage, QPainter, QColor, QPen, QFont, QWheelEvent
 from PySide6.QtWidgets import QFrame, QVBoxLayout, QPushButton, QLabel, QHBoxLayout, QSpacerItem, QSizePolicy, QWidget, \
     QScrollBar, QScrollArea, QErrorMessage
-from PySide6.QtCore import QEvent, Slot, Qt, QRect
+from PySide6.QtCore import QEvent, Slot, Qt, QRect, Signal
 
 import fitz
 
@@ -50,6 +50,19 @@ class HorizontalThumbnailScrollArea(QScrollArea):
             child.setFixedHeight(max(1, viewport_h))
 
 
+class ThumbLabel(QLabel):
+    clicked = Signal(ImageItem)
+
+    def __init__(self, img_item):
+        super().__init__()
+        self.img_item = img_item
+        self.setCursor(Qt.PointingHandCursor)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.clicked.emit(self.img_item)
+
+
 class OriginalImageViewer(QFrame):
     def __init__(self, image_store: ImageStore):
         super().__init__()
@@ -73,7 +86,7 @@ class OriginalImageViewer(QFrame):
         self.thumb_container = QWidget()
         self.thumb_layout = QHBoxLayout(self.thumb_container)
         self.thumb_layout.setContentsMargins(0, 0, 0, 0)
-        self.thumb_layout.setSpacing(4)
+        # self.thumb_layout.setSpacing(4)
 
         self.thumb_scroll.setWidget(self.thumb_container)
 
@@ -154,11 +167,12 @@ class OriginalImageViewer(QFrame):
         viewport_h = self.thumb_scroll.viewport().height()
 
         for img in images:
-            label = QLabel()
+            label = ThumbLabel(img)
             self.thumb_layout.addWidget(label)
             label.setFixedSize(100, viewport_h)
             label.setStyleSheet("background-color: red")
             label.setAlignment(Qt.AlignCenter)
+
             qimg = img.image
             pixmap = QPixmap.fromImage(qimg)
             pixmap = pixmap.scaled(
@@ -168,11 +182,21 @@ class OriginalImageViewer(QFrame):
             )
             label.setPixmap(pixmap)
 
-        print(self.image_store.get_images())
+            label.clicked.connect(self.on_image_label_clicked)
+
+        # Whenever images list in store is updated, set the first image to edited image
+        if len(images) > 0:
+            self.image_store.set_original_img(images[0].image)
+        else:
+            self.image_store.clear_original_img()
 
     @Slot()
     def on_clear_all(self):
         self.image_store.clear_images()
+
+    @Slot(ImageItem)
+    def on_image_label_clicked(self, img_item: ImageItem):
+        self.image_store.set_original_img(img_item.image)
 
 
 class EditedImageViewer(QFrame):
@@ -219,6 +243,9 @@ class EditedImageViewer(QFrame):
             # Trigger overlay repaint
             self.bbox_overlay.update()
             # Clear old bounding boxes since image changed
+            self.bbox_overlay.clear_boxes()
+        else:
+            self.image_viewer.clear()
             self.bbox_overlay.clear_boxes()
 
     @Slot(list)

@@ -15,6 +15,7 @@ class ImageItem:
 
 class ImageStore(QObject):
     imagesChanged = Signal(list)
+    originalImageChanged = Signal(QImage)
     editedImageChanged = Signal(QImage)
 
     def __init__(self, parent=None):
@@ -22,15 +23,13 @@ class ImageStore(QObject):
         self._img_items: list[ImageItem] = []
         self._keys: set[tuple[str, int | None]] = set()
 
+        self._original_img = QImage()
+
         self._edited_img = QImage()
 
-    # list of loaded images
+    # list of loaded images where each item is an instance of ImageItem
     def _key(self, item: ImageItem):
         return Path(item.path).resolve().as_posix(), item.page
-
-    # def add_img_item(self, img_item: ImageItem):
-    #     if img_item not in self._img_items:
-    #         self._img_items.append(img_item)
 
     def add_img_items(self, img_items: list[ImageItem]):
         changed = False
@@ -51,10 +50,26 @@ class ImageStore(QObject):
         self._keys.clear()
         self.imagesChanged.emit(self._img_items)
 
-    # editor preview
+    # original image. needed to set unprocessed image
+    def set_original_img(self, img: QImage):
+        self._original_img = img
+        self.originalImageChanged.emit(self._original_img)
+
+    def get_original_img(self) -> QImage:
+        return self._original_img
+
+    def clear_original_img(self):
+        self._original_img = QImage()
+        self.originalImageChanged.emit(self._original_img)
+
+    # edited image storage is needed for managing copy of processed version of original image
     def set_edited_img(self, img: QImage):
         self._edited_img = img
         self.editedImageChanged.emit(self._edited_img)
 
     def get_edited_img(self) -> QImage:
         return self._edited_img
+
+    def clear_edited_img(self):
+        self._edited_img = QImage()
+        self.editedImageChanged.emit(self._edited_img)

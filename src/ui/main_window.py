@@ -33,7 +33,6 @@ class MainWindow(QMainWindow):
 
         self.original_image_viewer = OriginalImageViewer(self.image_store)
         self.original_image_viewer.setStyleSheet("background-color: green")
-        self.original_image_viewer.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         self.left_container.layout().addWidget(self.original_image_viewer)
 
         self.text_viewer = TextViewerWidget(self.ocr_store)

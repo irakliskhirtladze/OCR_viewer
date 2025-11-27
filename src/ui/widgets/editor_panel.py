@@ -545,12 +545,17 @@ class EditorContainer(QFrame):
         # set up threadpool to run ocr in separate thread
         self.threadpool = QThreadPool()
 
-    def on_original_image_changed(self, qimg: QImage, path: str):
+        # connect to edited image changes
+        self.image_store.originalImageChanged.connect(self.on_original_image_changed)
+
+    @Slot(QImage)
+    def on_original_image_changed(self, qimg: QImage):
         """Store the original image when it changes"""
-        self.original_cv_img = qimage_to_cv(qimg)
-        self.reset_all_filters()
-        # Initialize edited image with original
-        self.image_store.set_edited_img(qimg)
+        if qimg is not None and not qimg.isNull():
+            self.original_cv_img = qimage_to_cv(qimg)
+            self.reset_all_filters()
+            # Initialize edited image with original
+            self.image_store.set_edited_img(qimg)
 
     @Slot()
     def on_params_changed(self):
