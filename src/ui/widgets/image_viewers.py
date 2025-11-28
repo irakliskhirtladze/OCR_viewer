@@ -14,11 +14,25 @@ from ui.models.image_store import ImageItem
 
 
 class HorizontalThumbnailScrollArea(QScrollArea):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        
+        self.image_store = None  # Will be set later
+        
+        # Create container for thumbnails
+        self.thumb_container = QWidget()
+        self.thumb_layout = QHBoxLayout(self.thumb_container)
+        self.thumb_layout.setContentsMargins(0, 0, 0, 0)
+        self.setWidget(self.thumb_container)
+    
+    def set_image_store(self, image_store: ImageStore):
+        """Inject image store after widget is created by Designer."""
+        self.image_store = image_store
+        # Listen to image store changes
+        self.image_store.imagesChanged.connect(self.on_images_changed)
 
     def wheelEvent(self, event: QWheelEvent):
         """
@@ -48,72 +62,6 @@ class HorizontalThumbnailScrollArea(QScrollArea):
         # adjust direct child QLabel thumbnail heights
         for child in w.findChildren(QLabel, options=Qt.FindDirectChildrenOnly):
             child.setFixedHeight(max(1, viewport_h))
-
-
-class ThumbLabel(QLabel):
-    clicked = Signal(ImageItem)
-
-    def __init__(self, img_item):
-        super().__init__()
-        self.img_item = img_item
-        self.setCursor(Qt.PointingHandCursor)
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.clicked.emit(self.img_item)
-
-
-class OriginalImageViewer(QFrame):
-    def __init__(self, image_store: ImageStore):
-        super().__init__()
-        self.setLayout(QVBoxLayout())
-        self.layout().setContentsMargins(0, 0, 0, 0)
-
-        self.image_store = image_store
-
-        # Listen to image store changes
-        self.image_store.imagesChanged.connect(self.on_images_changed)
-
-        # Top button bar
-        self._create_button_bar()
-
-        # Horizontal scroll area for thumbnails
-        self.thumb_scroll = HorizontalThumbnailScrollArea()
-        self.thumb_scroll.setStyleSheet("background-color: grey")
-        self.thumb_scroll.setFixedHeight(100)
-        self.layout().addWidget(self.thumb_scroll)
-
-        self.thumb_container = QWidget()
-        self.thumb_layout = QHBoxLayout(self.thumb_container)
-        self.thumb_layout.setContentsMargins(0, 0, 0, 0)
-        # self.thumb_layout.setSpacing(4)
-
-        self.thumb_scroll.setWidget(self.thumb_container)
-
-    def _create_button_bar(self):
-        """Create the top button bar with file chooser."""
-        btn_cont = QFrame()
-        btn_cont.setStyleSheet("background-color: grey")
-        btn_cont.setFixedHeight(50)
-        btn_cont.setLayout(QHBoxLayout())
-
-        # Choose image button
-        choose_btn = QPushButton("Choose files")
-        btn_cont.layout().addWidget(choose_btn)
-        choose_btn.setCursor(Qt.PointingHandCursor)
-        choose_btn.clicked.connect(self.on_choose_files)
-
-        # Spacer
-        spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        btn_cont.layout().addItem(spacer)
-
-        # clear all button
-        clear_all_btn = QPushButton("Clear all")
-        btn_cont.layout().addWidget(clear_all_btn)
-        clear_all_btn.setCursor(Qt.PointingHandCursor)
-        clear_all_btn.clicked.connect(self.on_clear_all)
-
-        self.layout().addWidget(btn_cont)
 
     # ========================================================================
     # File Loading
@@ -170,7 +118,7 @@ class OriginalImageViewer(QFrame):
             label = ThumbLabel(img)
             self.thumb_layout.addWidget(label)
             label.setFixedSize(100, viewport_h)
-            label.setStyleSheet("background-color: red")
+            label.setStyleSheet("background-color: green")
             label.setAlignment(Qt.AlignCenter)
 
             qimg = img.image
@@ -197,6 +145,153 @@ class OriginalImageViewer(QFrame):
     @Slot(ImageItem)
     def on_image_label_clicked(self, img_item: ImageItem):
         self.image_store.set_original_img(img_item.image)
+
+
+class ThumbLabel(QLabel):
+    clicked = Signal(ImageItem)
+
+    def __init__(self, img_item):
+        super().__init__()
+        self.img_item = img_item
+        self.setCursor(Qt.PointingHandCursor)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.clicked.emit(self.img_item)
+
+
+# class FileLoadContainer(QFrame):
+#     def __init__(self, image_store: ImageStore):
+#         super().__init__()
+#         self.setLayout(QVBoxLayout())
+#         self.layout().setContentsMargins(0, 0, 0, 0)
+#
+#         self.image_store = image_store
+#
+#         # Listen to image store changes
+#         self.image_store.imagesChanged.connect(self.on_images_changed)
+#
+#         # Top button bar
+#         self._create_button_bar()
+#
+#         # Horizontal scroll area for thumbnails
+#         self.thumb_scroll = HorizontalThumbnailScrollArea()
+#         self.thumb_scroll.setFixedHeight(100)
+#         self.layout().addWidget(self.thumb_scroll)
+#
+#         self.thumb_container = QWidget()
+#         self.thumb_layout = QHBoxLayout(self.thumb_container)
+#         self.thumb_layout.setContentsMargins(0, 0, 0, 0)
+#         # self.thumb_layout.setSpacing(4)
+#
+#         self.thumb_scroll.setWidget(self.thumb_container)
+#
+#     def _create_button_bar(self):
+#         """Create the top button bar with file chooser."""
+#         btn_cont = QFrame()
+#         btn_cont.setFixedHeight(50)
+#         btn_cont.setLayout(QHBoxLayout())
+#
+#         # Choose image button
+#         choose_btn = QPushButton("Choose files")
+#         btn_cont.layout().addWidget(choose_btn)
+#         choose_btn.setCursor(Qt.PointingHandCursor)
+#         choose_btn.clicked.connect(self.on_choose_files)
+#
+#         # Spacer
+#         spacer = QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum)
+#         btn_cont.layout().addItem(spacer)
+#
+#         # clear all button
+#         clear_all_btn = QPushButton("Clear all")
+#         btn_cont.layout().addWidget(clear_all_btn)
+#         clear_all_btn.setCursor(Qt.PointingHandCursor)
+#         clear_all_btn.clicked.connect(self.on_clear_all)
+#
+#         self.layout().addWidget(btn_cont)
+#
+#     # ========================================================================
+#     # File Loading
+#     # ========================================================================
+#     @Slot()
+#     def on_choose_files(self):
+#         """Open file dialog to choose an image."""
+#         file_paths = open_file_dialog(
+#             parent=self,
+#             caption="Choose Images or PDF",
+#             filter_str="Files (*.png *.jpg *.jpeg *.pdf)",
+#             multi=True
+#         )
+#
+#         if file_paths:
+#             self._load_files(file_paths)
+#
+#     def _load_files(self, file_paths: list):
+#         """Load images and add to scroll area."""
+#         image_list = []
+#         for file_path in file_paths:
+#             if file_path.lower().endswith((".png", ".jpg", ".jpeg")):
+#                 img_item = ImageItem(QImage(file_path), file_path)
+#                 image_list.append(img_item)
+#
+#             elif file_path.lower().endswith(".pdf"):
+#                 doc = fitz.open(file_path)
+#                 for page_num in range(len(doc)):
+#                     page = doc.load_page(page_num)
+#                     pix = page.get_pixmap(alpha=False)
+#                     qimage = QImage(
+#                         pix.samples,
+#                         pix.width,
+#                         pix.height,
+#                         pix.stride,
+#                         QImage.Format.Format_RGB888
+#                     ).copy()
+#                     img_item = ImageItem(qimage, file_path, page_num)
+#                     image_list.append(img_item)
+#
+#         self.image_store.add_img_items(image_list)
+#
+#     @Slot(list)
+#     def on_images_changed(self, images: list[ImageItem]):
+#         while self.thumb_layout.count():
+#             item = self.thumb_layout.takeAt(0)
+#             w = item.widget()
+#             if w is not None:
+#                 w.deleteLater()
+#
+#         viewport_h = self.thumb_scroll.viewport().height()
+#
+#         for img in images:
+#             label = ThumbLabel(img)
+#             self.thumb_layout.addWidget(label)
+#             label.setFixedSize(100, viewport_h)
+#             label.setStyleSheet("background-color: green")
+#             label.setAlignment(Qt.AlignCenter)
+#
+#             qimg = img.image
+#             pixmap = QPixmap.fromImage(qimg)
+#             pixmap = pixmap.scaled(
+#                 label.size(),
+#                 Qt.KeepAspectRatio,
+#                 Qt.SmoothTransformation
+#             )
+#             label.setPixmap(pixmap)
+#
+#             label.clicked.connect(self.on_image_label_clicked)
+#
+#         # Whenever images list in store is updated, set the first image to edited image
+#         if len(images) > 0:
+#             self.image_store.set_original_img(images[0].image)
+#         else:
+#             self.image_store.clear_original_img()
+#
+#     @Slot()
+#     def on_clear_all(self):
+#         self.image_store.clear_images()
+#
+#     @Slot(ImageItem)
+#     def on_image_label_clicked(self, img_item: ImageItem):
+#         self.image_store.set_original_img(img_item.image)
 
 
 class EditedImageViewer(QFrame):
