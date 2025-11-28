@@ -6,17 +6,17 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>890</width>
-    <height>689</height>
+    <width>1078</width>
+    <height>613</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,3">
+   <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0">
     <item>
-     <widget class="QFrame" name="leftCont">
+     <widget class="QFrame" name="left_cont">
       <property name="frameShape">
        <enum>QFrame::Shape::StyledPanel</enum>
       </property>
@@ -25,7 +25,7 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
        <item>
-        <widget class="QFrame" name="fileLoadCont">
+        <widget class="QFrame" name="file_load_cont">
          <property name="frameShape">
           <enum>QFrame::Shape::StyledPanel</enum>
          </property>
@@ -34,7 +34,7 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
-           <widget class="QFrame" name="buttonBarCont">
+           <widget class="QFrame" name="button_bar_cont">
             <property name="maximumSize">
              <size>
               <width>16777215</width>
@@ -49,7 +49,7 @@
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_3">
              <item>
-              <widget class="QPushButton" name="pushButton_2">
+              <widget class="QPushButton" name="choose_files_btn">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -72,7 +72,7 @@
               </spacer>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton">
+              <widget class="QPushButton" name="clear_all_btn">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -85,7 +85,7 @@
            </widget>
           </item>
           <item>
-           <widget class="HorizontalThumbnailScrollArea" name="scrollArea">
+           <widget class="HorizontalThumbnailScrollArea" name="thumb_scroll_area">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -98,16 +98,22 @@
               <height>100</height>
              </size>
             </property>
+            <property name="verticalScrollBarPolicy">
+             <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+            </property>
+            <property name="horizontalScrollBarPolicy">
+             <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOn</enum>
+            </property>
             <property name="widgetResizable">
              <bool>true</bool>
             </property>
-            <widget class="QWidget" name="scrollAreaWidgetContents">
+            <widget class="QWidget" name="thumb_scroll_widget">
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>304</width>
-               <height>98</height>
+               <width>485</width>
+               <height>86</height>
               </rect>
              </property>
             </widget>
@@ -117,22 +123,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QTextEdit" name="textEdit"/>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item>
-     <widget class="QFrame" name="rightCont">
-      <property name="frameShape">
-       <enum>QFrame::Shape::StyledPanel</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Shadow::Raised</enum>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,2">
-       <item>
-        <widget class="QFrame" name="frame_3">
+        <widget class="EditedImageViewer" name="edited_img_viewer">
          <property name="frameShape">
           <enum>QFrame::Shape::StyledPanel</enum>
          </property>
@@ -141,8 +132,23 @@
          </property>
         </widget>
        </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QFrame" name="right_cont">
+      <property name="frameShape">
+       <enum>QFrame::Shape::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Shadow::Raised</enum>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1">
        <item>
-        <widget class="QFrame" name="frame_4">
+        <widget class="QTextEdit" name="text_edit"/>
+       </item>
+       <item>
+        <widget class="QFrame" name="filter_cont">
          <property name="frameShape">
           <enum>QFrame::Shape::StyledPanel</enum>
          </property>
@@ -162,7 +168,13 @@
   <customwidget>
    <class>HorizontalThumbnailScrollArea</class>
    <extends>QScrollArea</extends>
-   <header>ui/widgets/image_viewers</header>
+   <header>ui/widgets/base_widgets/h_scroll_area</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>EditedImageViewer</class>
+   <extends>QFrame</extends>
+   <header>ui/widgets/edited_img_viewer</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
