@@ -1,11 +1,12 @@
 import fitz
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QImage, Qt, QPixmap
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout
+from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QFrame
 
 from ui.generated.ui_mainwindow import Ui_MainWindow
 from ui.models.image_store import ImageStore, ImageItem
 from ui.models.ocr_store import OCRStore
+from ui.widgets.img_filters import Filters
 from ui.widgets.thumbnail_label import ThumbLabel
 from utils.file_utils import open_file_dialog
 from utils.image_convert import qimage_to_cv
@@ -31,6 +32,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Thumbnail scroller
         self.thumb_layout = QHBoxLayout()
         self.thumb_scroll_widget.setLayout(self.thumb_layout)
+
+        # Filters
+        self.filters = Filters(self, self.image_store)
 
     # ===============================
     # Slots
@@ -91,11 +95,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     @Slot(QImage)
     def on_original_image_changed(self, qimg: QImage):
         """Store the original image when it changes"""
-        if qimg is not None and not qimg.isNull():
-            original_cv_img = qimage_to_cv(qimg)
-            # self.reset_all_filters()
-            # Initialize edited image with original
-            self.image_store.set_edited_img(qimg)
+        original_cv_img = qimage_to_cv(qimg)
+        # self.reset_all_filters()
+        # Initialize edited image with original
+        self.image_store.set_edited_img(qimg)
 
     @Slot(QImage)
     def _on_edited_image_changed(self, qimg: QImage):

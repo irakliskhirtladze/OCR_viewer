@@ -8,7 +8,7 @@ from PIL import Image
 from numpy.ma.extras import median
 from pytesseract import Output
 
-from src.backend.processor import auto_deskew, to_gray, to_binary, invert, dilate, remove_borders, gaussian_blur
+from src.ocr.processor import auto_deskew, to_gray, to_binary, invert, dilate, remove_borders, gaussian_blur
 from utils.file_utils import resource_path
 
 if __name__ == '__main__':
