@@ -149,7 +149,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
         self.binarize_slider = QSlider(self.frame)
         self.binarize_slider.setObjectName(u"binarize_slider")
+        self.binarize_slider.setEnabled(False)
         self.binarize_slider.setMaximum(255)
+        self.binarize_slider.setValue(127)
         self.binarize_slider.setOrientation(Qt.Orientation.Horizontal)
         self.binarize_slider.setTickPosition(QSlider.TickPosition.NoTicks)
         self.binarize_slider.setTickInterval(0)
@@ -236,6 +238,6 @@ class Ui_MainWindow(object):
         self.clear_all_btn.setText(QCoreApplication.translate("MainWindow", u"Clear all", None))
         self.grey_chbx.setText(QCoreApplication.translate("MainWindow", u"To Grey", None))
         self.binarize_chbx.setText(QCoreApplication.translate("MainWindow", u"Binarize", None))
-        self.binarize_val_lbl.setText(QCoreApplication.translate("MainWindow", u"100", None))
+        self.binarize_val_lbl.setText(QCoreApplication.translate("MainWindow", u"127", None))
     # retranslateUi
 

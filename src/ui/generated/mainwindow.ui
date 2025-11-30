@@ -208,8 +208,14 @@
                   <layout class="QHBoxLayout" name="horizontalLayout_5">
                    <item>
                     <widget class="QSlider" name="binarize_slider">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
                      <property name="maximum">
                       <number>255</number>
+                     </property>
+                     <property name="value">
+                      <number>127</number>
                      </property>
                      <property name="orientation">
                       <enum>Qt::Orientation::Horizontal</enum>
@@ -237,7 +243,7 @@
                       </size>
                      </property>
                      <property name="text">
-                      <string>100</string>
+                      <string>127</string>
                      </property>
                     </widget>
                    </item>

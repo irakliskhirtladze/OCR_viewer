@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QFrame
 from ui.generated.ui_mainwindow import Ui_MainWindow
 from ui.models.image_store import ImageStore, ImageItem
 from ui.models.ocr_store import OCRStore
-from ui.widgets.img_filters import Filters
+from ui.widgets.img_filters import FilterManager
 from ui.widgets.thumbnail_label import ThumbLabel
 from utils.file_utils import open_file_dialog
 from utils.image_convert import qimage_to_cv
@@ -34,7 +34,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.thumb_scroll_widget.setLayout(self.thumb_layout)
 
         # Filters
-        self.filters = Filters(self, self.image_store)
+        self.filters = FilterManager(self, self.image_store)
 
     # ===============================
     # Slots
