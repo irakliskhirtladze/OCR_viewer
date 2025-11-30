@@ -1,0 +1,8 @@
+QFrame {
+    border: none;
+}
+
+
+QScrollArea {
+    border: 1px solid grey;
+}

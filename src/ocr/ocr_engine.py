@@ -7,7 +7,7 @@ import easyocr
 
 
 def orc_tesseract(img: np.ndarray, lang: str = "eng", conf_threshold: int = 10) -> list[dict]:
-    """Takes OpenCV image and extracts OCR data from it using tesseract."""
+    """Takes OpenCV image and extracts OCR test_data from it using tesseract."""
     data = pytesseract.image_to_data(img, lang=lang, config="--psm 3", output_type=Output.DATAFRAME)
     words = data[(data.level == 5) & (data.conf >= conf_threshold)]
     words = words[['text', 'conf', 'left', 'top', 'width', 'height']]
@@ -18,7 +18,7 @@ def orc_tesseract(img: np.ndarray, lang: str = "eng", conf_threshold: int = 10) 
 
 
 def ocr_easyocr(img: np.ndarray, lang: str = "en") -> list:
-    """Takes OpenCV image and extracts OCR data from it using easyocr."""
+    """Takes OpenCV image and extracts OCR test_data from it using easyocr."""
     reader = easyocr.Reader([lang])
     return reader.readtext(img, detail=0, paragraph=True)
 

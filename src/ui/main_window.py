@@ -25,7 +25,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.choose_files_btn.clicked.connect(self.on_choose_files_clicked)
         self.clear_all_btn.clicked.connect(self.on_clear_all)
         self.image_store.imagesChanged.connect(self.on_images_changed)
-        self.image_store.originalImageChanged.connect(self.on_original_image_changed)
+        # self.image_store.originalImageChanged.connect(self.on_original_image_changed)
         self.image_store.editedImageChanged.connect(self._on_edited_image_changed)
         self.ocr_store.result_changed.connect(self._on_ocr_changed)
 
@@ -92,13 +92,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def on_image_label_clicked(self, img_item: ImageItem):
         self.image_store.set_original_img(img_item.image)
 
-    @Slot(QImage)
-    def on_original_image_changed(self, qimg: QImage):
-        """Store the original image when it changes"""
-        original_cv_img = qimage_to_cv(qimg)
-        # self.reset_all_filters()
-        # Initialize edited image with original
-        self.image_store.set_edited_img(qimg)
+    # @Slot(QImage)
+    # def on_original_image_changed(self, qimg: QImage):
+    #     """Store the original image when it changes"""
+    #     original_cv_img = qimage_to_cv(qimg)
+    #     # self.reset_all_filters()
+    #     # Initialize edited image with original
+    #     self.image_store.set_edited_img(qimg)
 
     @Slot(QImage)
     def _on_edited_image_changed(self, qimg: QImage):

@@ -15,16 +15,24 @@ class FilterManager(QObject):
         super().__init__()
         self.ui = ui
         self.image_store = image_store
-        # self.original_img = self.image_store.get_original_img()
         self.edited_image = self.image_store.get_edited_img()
 
         self.filters = [
             GreyFilter(self.ui),
-            BinaryFilter(self.ui)
+            BinaryFilter(self.ui),
+            InvertFilter(self.ui),
+            MedianBlurFilter(self.ui),
         ]
 
+        # Signal to slot binding
         for filt in self.filters:
             filt.paramsChanged.connect(self.on_params_changed)
+
+        self.image_store.originalImageChanged.connect(self.on_original_image_changed)
+
+    def reset_filters(self):
+        for filt in self.filters:
+            filt.reset()
 
     # ===================
     # slots
@@ -41,6 +49,12 @@ class FilterManager(QObject):
 
         qimg_processed = cv_to_qimage(cv_image)
         self.image_store.set_edited_img(qimg_processed)
+
+    @Slot(QImage)
+    def on_original_image_changed(self, qimg: QImage):
+        """Store the original image when it changes"""
+        self.reset_filters()
+        self.image_store.set_edited_img(qimg)
 
 
 class BaseFilter(QObject):
@@ -120,4 +134,62 @@ class BinaryFilter(BaseFilter):
     @Slot()
     def on_slider_value_changed(self, value):
         self.ui.binarize_val_lbl.setText(str(value))
+        self.paramsChanged.emit()
+
+
+class InvertFilter(BaseFilter):
+    def __init__(self, ui: Ui_MainWindow):
+        super().__init__()
+        self.ui = ui
+
+        self.ui.invert_chbx.toggled.connect(self.on_checkbox_toggled)
+
+    def get_params(self) -> dict:
+        return {
+            "enabled": self.ui.invert_chbx.isChecked(),
+        }
+
+    def apply_filter(self, img: np.ndarray) -> np.ndarray:
+        if self.get_params()["enabled"]:
+            return processor.invert(img)
+        return img
+
+    def reset(self):
+        self.ui.invert_chbx.setChecked(False)
+
+    @Slot(bool)
+    def on_checkbox_toggled(self, checked: bool):
+        self.paramsChanged.emit()
+
+
+class MedianBlurFilter(BaseFilter):
+    def __init__(self, ui: Ui_MainWindow):
+        super().__init__()
+        self.ui = ui
+        self.ui.median_chbx.toggled.connect(self.on_checkbox_toggled)
+        self.ui.median_ksize_spinbox.valueChanged.connect(self.on_ksize_value_changed)
+
+    def get_params(self) -> dict:
+        return {
+            "enabled": self.ui.median_chbx.isChecked(),
+            "k_size": self.ui.median_ksize_spinbox.value(),
+        }
+
+    def apply_filter(self, img: np.ndarray) -> np.ndarray:
+        if self.get_params()["enabled"]:
+            return processor.median_blur(img, self.get_params()["k_size"])
+        return img
+
+    def reset(self):
+        self.ui.median_chbx.setChecked(False)
+        self.ui.median_ksize_spinbox.setValue(3)
+        self.ui.median_ksize_spinbox.setEnabled(False)
+
+    @Slot(bool)
+    def on_checkbox_toggled(self, checked: bool):
+        self.ui.median_ksize_spinbox.setEnabled(checked)
+        self.paramsChanged.emit()
+
+    @Slot(int)
+    def on_ksize_value_changed(self, value: int):
         self.paramsChanged.emit()
