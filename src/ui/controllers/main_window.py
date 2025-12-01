@@ -1,15 +1,14 @@
-import fitz
+import pymupdf
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QImage, Qt, QPixmap
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QFrame
+from PySide6.QtWidgets import QMainWindow, QHBoxLayout
 
 from ui.generated.ui_mainwindow import Ui_MainWindow
-from ui.models.image_store import ImageStore, ImageItem
-from ui.models.ocr_store import OCRStore
-from ui.widgets.img_filters import FilterManager
-from ui.widgets.thumbnail_label import ThumbLabel
+from models.image_store import ImageStore, ImageItem
+from models.ocr_store import OCRStore
+from ui.controllers.filters import FilterManager
+from ui.widgets.common.thumbnail_label import ThumbLabel
 from utils.file_utils import open_file_dialog
-from utils.image_convert import qimage_to_cv
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -25,7 +24,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.choose_files_btn.clicked.connect(self.on_choose_files_clicked)
         self.clear_all_btn.clicked.connect(self.on_clear_all)
         self.image_store.imagesChanged.connect(self.on_images_changed)
-        # self.image_store.originalImageChanged.connect(self.on_original_image_changed)
         self.image_store.editedImageChanged.connect(self._on_edited_image_changed)
         self.ocr_store.result_changed.connect(self._on_ocr_changed)
 
@@ -92,14 +90,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def on_image_label_clicked(self, img_item: ImageItem):
         self.image_store.set_original_img(img_item.image)
 
-    # @Slot(QImage)
-    # def on_original_image_changed(self, qimg: QImage):
-    #     """Store the original image when it changes"""
-    #     original_cv_img = qimage_to_cv(qimg)
-    #     # self.reset_all_filters()
-    #     # Initialize edited image with original
-    #     self.image_store.set_edited_img(qimg)
-
     @Slot(QImage)
     def _on_edited_image_changed(self, qimg: QImage):
         """Update image viewer when edited image changes."""
@@ -131,19 +121,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 image_list.append(img_item)
 
             elif file_path.lower().endswith(".pdf"):
-                doc = fitz.open(file_path)
-                for page_num in range(len(doc)):
-                    page = doc.load_page(page_num)
-                    pix = page.get_pixmap(alpha=False)
-                    qimage = QImage(
-                        pix.samples,
-                        pix.width,
-                        pix.height,
-                        pix.stride,
-                        QImage.Format.Format_RGB888
-                    ).copy()
-                    img_item = ImageItem(qimage, file_path, page_num)
-                    image_list.append(img_item)
+                with pymupdf.open(file_path) as doc:
+                    for page_num in range(len(doc)):
+                        page = doc.load_page(page_num)
+                        pix = page.get_pixmap(alpha=False)
+                        qimage = QImage(
+                            pix.samples,
+                            pix.width,
+                            pix.height,
+                            pix.stride,
+                            QImage.Format.Format_RGB888
+                        ).copy()
+                        img_item = ImageItem(qimage, file_path, page_num)
+                        image_list.append(img_item)
 
         # Set the list of imageItems to store
         self.image_store.add_img_items(image_list)

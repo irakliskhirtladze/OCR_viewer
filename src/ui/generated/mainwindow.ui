@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1009</width>
-    <height>799</height>
+    <width>1023</width>
+    <height>800</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -135,7 +135,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>341</width>
+               <width>349</width>
                <height>86</height>
               </rect>
              </property>
@@ -204,7 +204,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QScrollArea" name="edited_thumb_scroll_area">
+           <widget class="HorizontalThumbnailScrollArea" name="edited_thumb_scroll_area">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -231,7 +231,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>341</width>
+               <width>349</width>
                <height>86</height>
               </rect>
              </property>
@@ -725,13 +725,13 @@
   <customwidget>
    <class>HorizontalThumbnailScrollArea</class>
    <extends>QScrollArea</extends>
-   <header>ui/widgets/base_widgets/h_scroll_area</header>
+   <header>ui/widgets/common/scroll_area</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>EditedImageViewer</class>
    <extends>QFrame</extends>
-   <header>ui/widgets/edited_img_viewer</header>
+   <header>ui/widgets/edited_image_viewer</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

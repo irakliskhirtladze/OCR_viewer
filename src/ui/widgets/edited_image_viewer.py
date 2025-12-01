@@ -2,9 +2,9 @@ from PySide6.QtCore import Qt, QRect, QEvent
 from PySide6.QtGui import QPainter, QPen, QColor, QFont
 from PySide6.QtWidgets import QWidget, QFrame, QHBoxLayout
 
-from ui.models.image_store import ImageStore
-from ui.models.ocr_store import OCRStore
-from ui.widgets.base_widgets.image_viewer import ImageViewer
+from models.image_store import ImageStore
+from models.ocr_store import OCRStore
+from ui.widgets.common.image_viewer import ImageViewer
 
 
 class EditedImageViewer(QFrame):

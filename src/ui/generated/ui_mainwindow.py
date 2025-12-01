@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'mainwindow.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.10.0
+## Created by: Qt User Interface Compiler version 6.10.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -17,18 +17,18 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QHBoxLayout, QLabel, QMainWindow, QPushButton,
-    QRadioButton, QScrollArea, QSizePolicy, QSlider,
-    QSpacerItem, QSpinBox, QStatusBar, QTextEdit,
-    QVBoxLayout, QWidget)
+    QRadioButton, QSizePolicy, QSlider, QSpacerItem,
+    QSpinBox, QStatusBar, QTextEdit, QVBoxLayout,
+    QWidget)
 
-from ui.widgets.base_widgets.h_scroll_area import HorizontalThumbnailScrollArea
-from ui.widgets.edited_img_viewer import EditedImageViewer
+from ui.widgets.common.scroll_area import HorizontalThumbnailScrollArea
+from ui.widgets.edited_image_viewer import EditedImageViewer
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1009, 799)
+        MainWindow.resize(1023, 800)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
@@ -89,7 +89,7 @@ class Ui_MainWindow(object):
         self.thumb_scroll_area.setWidgetResizable(True)
         self.thumb_scroll_widget = QWidget()
         self.thumb_scroll_widget.setObjectName(u"thumb_scroll_widget")
-        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 341, 86))
+        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 349, 86))
         self.thumb_scroll_area.setWidget(self.thumb_scroll_widget)
 
         self.verticalLayout_2.addWidget(self.thumb_scroll_area)
@@ -133,17 +133,17 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_11.addWidget(self.frame_8)
 
-        self.edited_thumb_scroll_area = QScrollArea(self.frame_7)
+        self.edited_thumb_scroll_area = HorizontalThumbnailScrollArea(self.frame_7)
         self.edited_thumb_scroll_area.setObjectName(u"edited_thumb_scroll_area")
         self.edited_thumb_scroll_area.setMinimumSize(QSize(0, 100))
         self.edited_thumb_scroll_area.setMaximumSize(QSize(16777215, 100))
         self.edited_thumb_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.edited_thumb_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.edited_thumb_scroll_area.setWidgetResizable(True)
-        self.scrollAreaWidgetContents = QWidget()
-        self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 341, 86))
-        self.edited_thumb_scroll_area.setWidget(self.scrollAreaWidgetContents)
+        self.edited_thumb_scroll_widget = QWidget()
+        self.edited_thumb_scroll_widget.setObjectName(u"edited_thumb_scroll_widget")
+        self.edited_thumb_scroll_widget.setGeometry(QRect(0, 0, 349, 86))
+        self.edited_thumb_scroll_area.setWidget(self.edited_thumb_scroll_widget)
 
         self.verticalLayout_11.addWidget(self.edited_thumb_scroll_area)
 

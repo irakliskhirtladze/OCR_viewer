@@ -3,9 +3,9 @@ from PySide6.QtCore import Signal, QObject, Slot
 from PySide6.QtGui import QImage
 
 from ui.generated.ui_mainwindow import Ui_MainWindow
-from ui.models.image_store import ImageStore
-from utils.image_convert import qimage_to_cv, cv_to_qimage
-from ocr import processor
+from models.image_store import ImageStore
+from utils.image_converter import qimage_to_cv, cv_to_qimage
+from core import image_processor
 
 
 class FilterManager(QObject):
@@ -90,7 +90,7 @@ class GreyFilter(BaseFilter):
 
     def apply_filter(self, img: np.ndarray) -> np.ndarray:
         if self.get_params()["enabled"]:
-            return processor.to_gray(img)
+            return image_processor.to_gray(img)
         return img
 
     def reset(self):
@@ -118,7 +118,7 @@ class BinaryFilter(BaseFilter):
     def apply_filter(self, img: np.ndarray) -> np.ndarray:
         if self.get_params()["enabled"]:
             value = self.get_params()["threshold"]
-            return processor.to_binary(img, value, 255)
+            return image_processor.to_binary(img, value, 255)
         return img
 
     def reset(self):
@@ -151,7 +151,7 @@ class InvertFilter(BaseFilter):
 
     def apply_filter(self, img: np.ndarray) -> np.ndarray:
         if self.get_params()["enabled"]:
-            return processor.invert(img)
+            return image_processor.invert(img)
         return img
 
     def reset(self):
@@ -177,7 +177,7 @@ class MedianBlurFilter(BaseFilter):
 
     def apply_filter(self, img: np.ndarray) -> np.ndarray:
         if self.get_params()["enabled"]:
-            return processor.median_blur(img, self.get_params()["k_size"])
+            return image_processor.median_blur(img, self.get_params()["k_size"])
         return img
 
     def reset(self):
