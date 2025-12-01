@@ -568,6 +568,13 @@
                </layout>
               </widget>
              </item>
+             <item>
+              <widget class="QPushButton" name="apply_to_all_btn">
+               <property name="text">
+                <string>Aplly to all images</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </widget>
           </item>

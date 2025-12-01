@@ -22,8 +22,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Connect signals and slots
         self.choose_files_btn.clicked.connect(self.on_choose_files_clicked)
-        self.clear_all_btn.clicked.connect(self.on_clear_all)
+        self.clear_all_btn.clicked.connect(self.on_clear_all_btn_clicked)
         self.image_store.imagesChanged.connect(self.on_images_changed)
+        self.image_store.imageChanged.connect(self.on_image_changed)
         self.image_store.editedImageChanged.connect(self._on_edited_image_changed)
         self.ocr_store.result_changed.connect(self._on_ocr_changed)
 
@@ -32,7 +33,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.thumb_scroll_widget.setLayout(self.thumb_layout)
 
         # Filters
-        self.filters = FilterManager(self, self.image_store)
+        self.filter_manager = FilterManager(self, self.image_store)
 
     # ===============================
     # Slots
@@ -52,6 +53,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     @Slot(list)
     def on_images_changed(self, images: list[ImageItem]):
+        """
+        Clear thumb scroll widget, and add current items to it as thumbnails.
+        Also set first image (if available) from list as single image in store.
+        """
         while self.thumb_layout.count():
             item = self.thumb_layout.takeAt(0)
             w = item.widget()
@@ -78,31 +83,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Whenever images list in store is updated, set the first image to edited image
         if len(images) > 0:
-            self.image_store.set_original_img(images[0].image)
+            self.image_store.set_img_item(images[0])
         else:
-            self.image_store.clear_original_img()
+            self.image_store.clear_img_item()
+
+    @Slot(ImageItem)
+    def on_image_changed(self, img_item: ImageItem):
+        """When single original image in store is updated, update preview with that image"""
+        if img_item.image.isNull():
+            self.edited_img_viewer.image_viewer.clear()
+            self.edited_img_viewer.bbox_overlay.clear_boxes()
+
+        pixmap = QPixmap.fromImage(img_item.image)
+        self.edited_img_viewer.image_viewer.load_pixmap(pixmap)
+        self.filter_manager.reset_filters()
 
     @Slot(bool)
-    def on_clear_all(self):
-        self.image_store.clear_images()
+    def on_clear_all_btn_clicked(self):
+        """Clears all original images in store."""
+        self.image_store.clear_img_items()
 
     @Slot(ImageItem)
     def on_image_label_clicked(self, img_item: ImageItem):
-        self.image_store.set_original_img(img_item.image)
+        self.image_store.set_img_item(img_item)
 
-    @Slot(QImage)
-    def _on_edited_image_changed(self, qimg: QImage):
-        """Update image viewer when edited image changes."""
-        if qimg is not None and not qimg.isNull():
-            pixmap = QPixmap.fromImage(qimg)
-            self.edited_img_viewer.image_viewer.load_pixmap(pixmap)
-            # Trigger overlay repaint
-            self.edited_img_viewer.bbox_overlay.update()
-            # Clear old bounding boxes since image changed
-            self.edited_img_viewer.bbox_overlay.clear_boxes()
-        else:
+    @Slot(list)
+    def _on_edited_image_changed(self, edited_img_item: ImageItem):
+        """When single edited image in store is updated, update preview with that image"""
+        if edited_img_item.image.isNull():
             self.edited_img_viewer.image_viewer.clear()
             self.edited_img_viewer.bbox_overlay.clear_boxes()
+
+        pixmap = QPixmap.fromImage(edited_img_item.image)
+        self.edited_img_viewer.image_viewer.load_pixmap(pixmap)
+        # Trigger overlay repaint
+        self.edited_img_viewer.bbox_overlay.update()
+        # Clear old bounding boxes since image changed
+        self.edited_img_viewer.bbox_overlay.clear_boxes()
 
     @Slot(list)
     def _on_ocr_changed(self, result: list):

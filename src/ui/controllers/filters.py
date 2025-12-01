@@ -3,7 +3,7 @@ from PySide6.QtCore import Signal, QObject, Slot
 from PySide6.QtGui import QImage
 
 from ui.generated.ui_mainwindow import Ui_MainWindow
-from models.image_store import ImageStore
+from models.image_store import ImageStore, ImageItem
 from utils.image_converter import qimage_to_cv, cv_to_qimage
 from core import image_processor
 
@@ -15,7 +15,7 @@ class FilterManager(QObject):
         super().__init__()
         self.ui = ui
         self.image_store = image_store
-        self.edited_image = self.image_store.get_edited_img()
+        self.edited_image = self.image_store.get_edited_images()
 
         self.filters = [
             GreyFilter(self.ui),
@@ -28,8 +28,6 @@ class FilterManager(QObject):
         for filt in self.filters:
             filt.paramsChanged.connect(self.on_params_changed)
 
-        self.image_store.originalImageChanged.connect(self.on_original_image_changed)
-
     def reset_filters(self):
         for filt in self.filters:
             filt.reset()
@@ -39,22 +37,17 @@ class FilterManager(QObject):
     # ===================
     @Slot()
     def on_params_changed(self):
-        original_img = self.image_store.get_original_img()
-        if original_img.isNull():
+        original_img_item = self.image_store.get_img_item()
+        if original_img_item.image.isNull():
             return
 
-        cv_image = qimage_to_cv(original_img)
+        cv_image = qimage_to_cv(original_img_item.image)
         for filt in self.filters:
             cv_image = filt.apply_filter(cv_image)
 
         qimg_processed = cv_to_qimage(cv_image)
-        self.image_store.set_edited_img(qimg_processed)
-
-    @Slot(QImage)
-    def on_original_image_changed(self, qimg: QImage):
-        """Store the original image when it changes"""
-        self.reset_filters()
-        self.image_store.set_edited_img(qimg)
+        qimg_item = ImageItem(qimg_processed, original_img_item.path)
+        self.image_store.set_edited_img_item(qimg_item)
 
 
 class BaseFilter(QObject):

@@ -16,6 +16,7 @@ class ImageItem:
 class ImageStore(QObject):
     imagesChanged = Signal(list)
     imageChanged = Signal(ImageItem)
+    editedImageChanged = Signal(ImageItem)
     editedImagesChanged = Signal(list)
 
     def __init__(self, parent=None):
@@ -24,6 +25,8 @@ class ImageStore(QObject):
         self._keys: set[tuple[str, int | None]] = set()
 
         self._img_item = ImageItem(QImage(), "")
+
+        self._edited_img_item = ImageItem(QImage(), "")
 
         self._edited_img_items: list[ImageItem] = []
 
@@ -42,34 +45,45 @@ class ImageStore(QObject):
         if changed:
             self.imagesChanged.emit(self._img_items)
 
-    def get_images(self) -> list[ImageItem]:
+    def get_img_items(self) -> list[ImageItem]:
         return self._img_items
 
-    def clear_images(self):
+    def clear_img_items(self):
         self._img_items.clear()
         self._keys.clear()
         self.imagesChanged.emit(self._img_items)
 
-    # original image. needed to set unprocessed image
+    # single original image needed for preview
     def set_img_item(self, img_item: ImageItem):
         self._img_item = img_item
-        self.imageChanged.emit(self._original_img)
+        self.imageChanged.emit(self._img_item)
 
     def get_img_item(self) -> ImageItem:
         return self._img_item
 
     def clear_img_item(self):
-        self._original_img = QImage()
-        self.originalImageChanged.emit(self._original_img)
+        self._img_item = ImageItem(QImage(), "")
+        self.imageChanged.emit(self._img_item)
+
+    # single edited image for preview
+    def set_edited_img_item(self, img_item: ImageItem):
+        self._edited_img_item = img_item
+        self.editedImageChanged.emit(self._edited_img_item)
+
+    def get_edited_img_item(self) -> ImageItem:
+        return self._edited_img_item
+
+    def clear_edited_img_item(self):
+        self._edited_img_item = ImageItem(QImage(), "")
 
     # list of edited images using batch editing
-    def set_edited_images(self, img: QImage):
-        self._edited_img = img
-        self.editedImageChanged.emit(self._edited_img)
+    def add_edited_images(self, img_items: list[ImageItem]):
+        self._edited_img_items = img_items
+        self.editedImagesChanged.emit(self._edited_img_items)
 
-    def get_edited_img(self) -> QImage:
-        return self._edited_img
+    def get_edited_images(self) -> list[ImageItem]:
+        return self._edited_img_items
 
-    def clear_edited_img(self):
-        self._edited_img = QImage()
-        self.editedImageChanged.emit(self._edited_img)
+    def clear_edited_images(self):
+        self._edited_img_items.clear()
+        self.editedImagesChanged.emit(self._edited_img_items)
