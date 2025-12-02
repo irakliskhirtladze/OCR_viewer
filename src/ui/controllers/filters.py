@@ -26,28 +26,46 @@ class FilterManager(QObject):
 
         # Signal to slot binding
         for filt in self.filters:
-            filt.paramsChanged.connect(self.on_params_changed)
+            filt.paramsChanged.connect(self.apply_filters)
 
-    def reset_filters(self):
-        for filt in self.filters:
-            filt.reset()
+        self.ui.apply_to_all_btn.clicked.connect(self.apply_to_all_images)
+        self.ui.reset_all_btn.clicked.connect(self.reset_filters)
 
     # ===================
     # slots
     # ===================
     @Slot()
-    def on_params_changed(self):
-        original_img_item = self.image_store.get_img_item()
-        if original_img_item.image.isNull():
-            return
+    def apply_filters(self):
+        """Apply filters on a single image and set it to edited image"""
+        # img_item_to_edit = Should be current image item shown on preview
 
-        cv_image = qimage_to_cv(original_img_item.image)
+        cv_image = qimage_to_cv(img_item_to_edit.image)
         for filt in self.filters:
             cv_image = filt.apply_filter(cv_image)
 
         qimg_processed = cv_to_qimage(cv_image)
-        qimg_item = ImageItem(qimg_processed, original_img_item.path)
+        qimg_item = ImageItem(qimg_processed, img_item_to_edit.path)
         self.image_store.set_edited_img_item(qimg_item)
+
+    @Slot()
+    def apply_to_all_images(self):
+        """Apply active filters to all original images in list"""
+        original_img_items = self.image_store.get_img_items()
+        edited_img_items = []
+        for img_item in original_img_items:
+            cv_image = qimage_to_cv(img_item.image)
+            for filt in self.filters:
+                cv_image = filt.apply_filter(cv_image)
+
+            qimg_processed = cv_to_qimage(cv_image)
+            edited_img_item = ImageItem(qimg_processed, img_item.path)
+            edited_img_items.append(edited_img_item)
+        self.image_store.add_edited_images(edited_img_items)
+
+    @Slot()
+    def reset_filters(self):
+        for filt in self.filters:
+            filt.reset()
 
 
 class BaseFilter(QObject):

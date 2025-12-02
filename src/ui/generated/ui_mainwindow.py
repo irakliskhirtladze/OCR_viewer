@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'mainwindow.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.10.1
+## Created by: Qt User Interface Compiler version 6.10.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -89,7 +89,7 @@ class Ui_MainWindow(object):
         self.thumb_scroll_area.setWidgetResizable(True)
         self.thumb_scroll_widget = QWidget()
         self.thumb_scroll_widget.setObjectName(u"thumb_scroll_widget")
-        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 349, 86))
+        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 348, 86))
         self.thumb_scroll_area.setWidget(self.thumb_scroll_widget)
 
         self.verticalLayout_2.addWidget(self.thumb_scroll_area)
@@ -142,7 +142,7 @@ class Ui_MainWindow(object):
         self.edited_thumb_scroll_area.setWidgetResizable(True)
         self.edited_thumb_scroll_widget = QWidget()
         self.edited_thumb_scroll_widget.setObjectName(u"edited_thumb_scroll_widget")
-        self.edited_thumb_scroll_widget.setGeometry(QRect(0, 0, 349, 86))
+        self.edited_thumb_scroll_widget.setGeometry(QRect(0, 0, 348, 86))
         self.edited_thumb_scroll_area.setWidget(self.edited_thumb_scroll_widget)
 
         self.verticalLayout_11.addWidget(self.edited_thumb_scroll_area)
@@ -368,6 +368,25 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.dilate_erode_filter)
 
+        self.frame_13 = QFrame(self.filter_cont)
+        self.frame_13.setObjectName(u"frame_13")
+        self.frame_13.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_13.setFrameShadow(QFrame.Shadow.Raised)
+        self.horizontalLayout_12 = QHBoxLayout(self.frame_13)
+        self.horizontalLayout_12.setObjectName(u"horizontalLayout_12")
+        self.reset_all_btn = QPushButton(self.frame_13)
+        self.reset_all_btn.setObjectName(u"reset_all_btn")
+
+        self.horizontalLayout_12.addWidget(self.reset_all_btn)
+
+        self.apply_to_all_btn = QPushButton(self.frame_13)
+        self.apply_to_all_btn.setObjectName(u"apply_to_all_btn")
+
+        self.horizontalLayout_12.addWidget(self.apply_to_all_btn)
+
+
+        self.verticalLayout_4.addWidget(self.frame_13)
+
 
         self.verticalLayout_3.addWidget(self.filter_cont)
 
@@ -485,10 +504,10 @@ class Ui_MainWindow(object):
         self.clear_all_btn.setText(QCoreApplication.translate("MainWindow", u"Clear all", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Processed images", None))
         self.clear_all_edited_btn.setText(QCoreApplication.translate("MainWindow", u"Clear all", None))
-        self.grey_chbx.setText(QCoreApplication.translate("MainWindow", u"To Grey", None))
+        self.grey_chbx.setText(QCoreApplication.translate("MainWindow", u"Grayscale", None))
         self.binarize_chbx.setText(QCoreApplication.translate("MainWindow", u"Binarize", None))
         self.binarize_val_lbl.setText(QCoreApplication.translate("MainWindow", u"127", None))
-        self.invert_chbx.setText(QCoreApplication.translate("MainWindow", u"Invert", None))
+        self.invert_chbx.setText(QCoreApplication.translate("MainWindow", u"Invert colors", None))
         self.median_chbx.setText(QCoreApplication.translate("MainWindow", u"Median blur", None))
         self.median_lbl.setText(QCoreApplication.translate("MainWindow", u"K size", None))
         self.dilate_erode_chbx.setText(QCoreApplication.translate("MainWindow", u"Dilate/Erode", None))
@@ -496,6 +515,8 @@ class Ui_MainWindow(object):
         self.erode_radio.setText(QCoreApplication.translate("MainWindow", u"Erode", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"K size", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Iteration", None))
+        self.reset_all_btn.setText(QCoreApplication.translate("MainWindow", u"Reset all", None))
+        self.apply_to_all_btn.setText(QCoreApplication.translate("MainWindow", u"Aplly to all images", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"Choose OCR engine", None))
         self.ocr_engine_combo.setItemText(0, QCoreApplication.translate("MainWindow", u"Tesseract", None))
         self.ocr_engine_combo.setItemText(1, QCoreApplication.translate("MainWindow", u"EasyOCR", None))

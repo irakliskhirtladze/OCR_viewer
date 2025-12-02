@@ -135,7 +135,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>349</width>
+               <width>348</width>
                <height>86</height>
               </rect>
              </property>
@@ -231,7 +231,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>349</width>
+               <width>348</width>
                <height>86</height>
               </rect>
              </property>
@@ -283,7 +283,7 @@
                 <item>
                  <widget class="QCheckBox" name="grey_chbx">
                   <property name="text">
-                   <string>To Grey</string>
+                   <string>Grayscale</string>
                   </property>
                  </widget>
                 </item>
@@ -374,7 +374,7 @@
                 <item>
                  <widget class="QCheckBox" name="invert_chbx">
                   <property name="text">
-                   <string>Invert</string>
+                   <string>Invert colors</string>
                   </property>
                  </widget>
                 </item>
@@ -569,10 +569,29 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="apply_to_all_btn">
-               <property name="text">
-                <string>Aplly to all images</string>
+              <widget class="QFrame" name="frame_13">
+               <property name="frameShape">
+                <enum>QFrame::Shape::StyledPanel</enum>
                </property>
+               <property name="frameShadow">
+                <enum>QFrame::Shadow::Raised</enum>
+               </property>
+               <layout class="QHBoxLayout" name="horizontalLayout_12">
+                <item>
+                 <widget class="QPushButton" name="reset_all_btn">
+                  <property name="text">
+                   <string>Reset all</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="apply_to_all_btn">
+                  <property name="text">
+                   <string>Aplly to all images</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </widget>
              </item>
             </layout>
