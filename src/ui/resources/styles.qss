@@ -1,5 +1,7 @@
 QFrame {
     border: none;
+    padding: 0px;
+    background-color: rgb(45, 45, 45);
 }
 
 

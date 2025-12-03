@@ -47,8 +47,6 @@ class FilterManager(QObject):
 
         # Get original and apply filters
         original_img = self.image_store.get_img_items().get(current_img_item.id)
-        if not original_img:
-            return
 
         cv_img = qimage_to_cv(original_img.image)
         for filt in self.filters:
@@ -62,12 +60,26 @@ class FilterManager(QObject):
     @Slot()
     def apply_to_all_images(self):
         """Apply active filters to all original images in list"""
-        pass
+        img_items = self.image_store.get_img_items()
+        edited_img_items = {}
+        for img_item in img_items.values():
+            img_item_id = img_item.id
+            original_img_item = self.image_store.get_img_items().get(img_item_id)
+            cv_img = qimage_to_cv(original_img_item.image)
+            for filt in self.filters:
+                cv_img = filt.apply_filter(cv_img)
+            qimg_edited = cv_to_qimage(cv_img)
+            edited_img_item = ImageItem(qimg_edited, img_item.path, img_item.page)
+            edited_img_items[edited_img_item.id] = edited_img_item
+
+        self.image_store.add_edited_images(edited_img_items)
 
     @Slot()
     def reset_filters(self):
         for filt in self.filters:
             filt.reset()
+
+        self.apply_to_all_images()
 
 
 class BaseFilter(QObject):

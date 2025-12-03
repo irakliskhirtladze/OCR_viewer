@@ -28,23 +28,26 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1023, 800)
+        MainWindow.resize(1090, 800)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setContentsMargins(5, 5, 5, 5)
         self.left_cont = QFrame(self.centralwidget)
         self.left_cont.setObjectName(u"left_cont")
         self.left_cont.setFrameShape(QFrame.Shape.StyledPanel)
         self.left_cont.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout = QVBoxLayout(self.left_cont)
         self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.file_load_cont = QFrame(self.left_cont)
         self.file_load_cont.setObjectName(u"file_load_cont")
         self.file_load_cont.setFrameShape(QFrame.Shape.StyledPanel)
         self.file_load_cont.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_2 = QVBoxLayout(self.file_load_cont)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.button_bar_cont = QFrame(self.file_load_cont)
         self.button_bar_cont.setObjectName(u"button_bar_cont")
         self.button_bar_cont.setMaximumSize(QSize(16777215, 50))
@@ -89,7 +92,7 @@ class Ui_MainWindow(object):
         self.thumb_scroll_area.setWidgetResizable(True)
         self.thumb_scroll_widget = QWidget()
         self.thumb_scroll_widget.setObjectName(u"thumb_scroll_widget")
-        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 348, 86))
+        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 363, 86))
         self.thumb_scroll_area.setWidget(self.thumb_scroll_widget)
 
         self.verticalLayout_2.addWidget(self.thumb_scroll_area)
@@ -110,6 +113,7 @@ class Ui_MainWindow(object):
         self.frame_7.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_11 = QVBoxLayout(self.frame_7)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
+        self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
         self.frame_8 = QFrame(self.frame_7)
         self.frame_8.setObjectName(u"frame_8")
         self.frame_8.setFrameShape(QFrame.Shape.StyledPanel)
@@ -142,7 +146,7 @@ class Ui_MainWindow(object):
         self.edited_thumb_scroll_area.setWidgetResizable(True)
         self.edited_thumb_scroll_widget = QWidget()
         self.edited_thumb_scroll_widget.setObjectName(u"edited_thumb_scroll_widget")
-        self.edited_thumb_scroll_widget.setGeometry(QRect(0, 0, 348, 86))
+        self.edited_thumb_scroll_widget.setGeometry(QRect(0, 0, 363, 86))
         self.edited_thumb_scroll_area.setWidget(self.edited_thumb_scroll_widget)
 
         self.verticalLayout_11.addWidget(self.edited_thumb_scroll_area)
@@ -154,24 +158,20 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.left_cont)
 
-        self.right_cont = QFrame(self.centralwidget)
-        self.right_cont.setObjectName(u"right_cont")
-        self.right_cont.setFrameShape(QFrame.Shape.StyledPanel)
-        self.right_cont.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_2 = QHBoxLayout(self.right_cont)
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.control_cont = QFrame(self.right_cont)
+        self.control_cont = QFrame(self.centralwidget)
         self.control_cont.setObjectName(u"control_cont")
         self.control_cont.setFrameShape(QFrame.Shape.StyledPanel)
         self.control_cont.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_3 = QVBoxLayout(self.control_cont)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.filter_cont = QFrame(self.control_cont)
         self.filter_cont.setObjectName(u"filter_cont")
         self.filter_cont.setFrameShape(QFrame.Shape.StyledPanel)
         self.filter_cont.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_4 = QVBoxLayout(self.filter_cont)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.grey_filter = QFrame(self.filter_cont)
         self.grey_filter.setObjectName(u"grey_filter")
         self.grey_filter.setFrameShape(QFrame.Shape.StyledPanel)
@@ -374,15 +374,15 @@ class Ui_MainWindow(object):
         self.frame_13.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_12 = QHBoxLayout(self.frame_13)
         self.horizontalLayout_12.setObjectName(u"horizontalLayout_12")
-        self.reset_all_btn = QPushButton(self.frame_13)
-        self.reset_all_btn.setObjectName(u"reset_all_btn")
-
-        self.horizontalLayout_12.addWidget(self.reset_all_btn)
-
         self.apply_to_all_btn = QPushButton(self.frame_13)
         self.apply_to_all_btn.setObjectName(u"apply_to_all_btn")
 
         self.horizontalLayout_12.addWidget(self.apply_to_all_btn)
+
+        self.reset_all_btn = QPushButton(self.frame_13)
+        self.reset_all_btn.setObjectName(u"reset_all_btn")
+
+        self.horizontalLayout_12.addWidget(self.reset_all_btn)
 
 
         self.verticalLayout_4.addWidget(self.frame_13)
@@ -396,6 +396,7 @@ class Ui_MainWindow(object):
         self.ocr_settings_cont.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_12 = QVBoxLayout(self.ocr_settings_cont)
         self.verticalLayout_12.setObjectName(u"verticalLayout_12")
+        self.verticalLayout_12.setContentsMargins(0, 0, 0, 0)
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_12.addItem(self.verticalSpacer)
@@ -475,17 +476,21 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.addWidget(self.ocr_settings_cont)
 
 
-        self.horizontalLayout_2.addWidget(self.control_cont)
+        self.horizontalLayout.addWidget(self.control_cont)
 
-        self.text_edit = QTextEdit(self.right_cont)
+        self.text_cont = QFrame(self.centralwidget)
+        self.text_cont.setObjectName(u"text_cont")
+        self.text_cont.setFrameShape(QFrame.Shape.StyledPanel)
+        self.text_cont.setFrameShadow(QFrame.Shadow.Raised)
+        self.horizontalLayout_13 = QHBoxLayout(self.text_cont)
+        self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
+        self.text_edit = QTextEdit(self.text_cont)
         self.text_edit.setObjectName(u"text_edit")
 
-        self.horizontalLayout_2.addWidget(self.text_edit)
+        self.horizontalLayout_13.addWidget(self.text_edit)
 
-        self.horizontalLayout_2.setStretch(0, 1)
-        self.horizontalLayout_2.setStretch(1, 1)
 
-        self.horizontalLayout.addWidget(self.right_cont)
+        self.horizontalLayout.addWidget(self.text_cont)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
@@ -515,8 +520,8 @@ class Ui_MainWindow(object):
         self.erode_radio.setText(QCoreApplication.translate("MainWindow", u"Erode", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"K size", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Iteration", None))
-        self.reset_all_btn.setText(QCoreApplication.translate("MainWindow", u"Reset all", None))
         self.apply_to_all_btn.setText(QCoreApplication.translate("MainWindow", u"Aplly to all images", None))
+        self.reset_all_btn.setText(QCoreApplication.translate("MainWindow", u"Reset to all images", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"Choose OCR engine", None))
         self.ocr_engine_combo.setItemText(0, QCoreApplication.translate("MainWindow", u"Tesseract", None))
         self.ocr_engine_combo.setItemText(1, QCoreApplication.translate("MainWindow", u"EasyOCR", None))
