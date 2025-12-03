@@ -20,13 +20,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.image_store = ImageStore()
         self.ocr_store = OCRStore()
 
+        # Filters
+        self.filter_manager = FilterManager(self, self.image_store)
+
         # Connect signals and slots
         self.choose_files_btn.clicked.connect(self.on_choose_files_clicked)
         self.clear_all_btn.clicked.connect(self.on_clear_all_btn_clicked)
+
         self.image_store.imagesChanged.connect(self.on_images_changed)
-        self.image_store.imageChanged.connect(self.on_image_changed)
-        self.image_store.editedImageChanged.connect(self._on_edited_image_changed)
+        self.image_store.currentImageChanged.connect(self.on_current_image_changed)
+        self.image_store.currentImageChanged.connect(self.filter_manager.apply_filters)
         self.image_store.editedImagesChanged.connect(self.on_edited_images_changed)
+
         self.ocr_store.result_changed.connect(self._on_ocr_changed)
 
         # Thumbnail scroller
@@ -37,16 +42,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.edited_thumb_layout = QHBoxLayout()
         self.edited_thumb_scroll_widget.setLayout(self.edited_thumb_layout)
 
-        # Filters
-        self.filter_manager = FilterManager(self, self.image_store)
-
     # ===============================
     # Slots
     # ===============================
     @Slot(bool)
     def on_choose_files_clicked(self):
         """Open file dialog to choose an image."""
-        file_paths = open_file_dialog(
+        file_paths: list[str] | None = open_file_dialog(
             parent=self,
             caption="Choose Images or PDF",
             filter_str="Files (*.png *.jpg *.jpeg *.pdf)",
@@ -57,7 +59,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._load_files(file_paths)
 
     @Slot(list)
-    def on_images_changed(self, images: list[ImageItem]):
+    def on_images_changed(self, images: dict[str, ImageItem]):
         """
         Clear thumb scroll widget, and add current items to it as thumbnails.
         Also set first image (if available) from list as single image in store.
@@ -70,14 +72,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         viewport_h = self.thumb_scroll_area.viewport().height()
 
-        for img in images:
-            label = ThumbLabel(img)
+        for img_item in images.values():
+            label = ThumbLabel(img_item)
             self.thumb_layout.addWidget(label)
             label.setFixedSize(100, viewport_h)
 
-            qimg = img.image
-            pixmap = QPixmap.fromImage(qimg)
-            pixmap = pixmap.scaled(
+            qimg = img_item.image
+            pixmap = QPixmap.fromImage(qimg).scaled(
                 label.size(),
                 Qt.KeepAspectRatio,
                 Qt.SmoothTransformation
@@ -88,18 +89,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Whenever images list in store is updated, set the first image to edited image
         if len(images) > 0:
-            self.image_store.set_img_item(images[0])
+            first_image = next(iter(images.values()))
+            self.image_store.set_current_img_item(first_image)
         else:
             self.image_store.clear_img_item()
 
     @Slot(ImageItem)
-    def on_image_changed(self, img_item: ImageItem):
-        """When single original image in store is updated, update preview with that image"""
-        if img_item.image.isNull():
+    def on_current_image_changed(self, current_img_item: ImageItem):
+        """When current image in store is updated, update preview with that image"""
+        if current_img_item.image.isNull():
             self.edited_img_viewer.image_viewer.clear()
             self.edited_img_viewer.bbox_overlay.clear_boxes()
 
-        pixmap = QPixmap.fromImage(img_item.image)
+        pixmap = QPixmap.fromImage(current_img_item.image)
         self.edited_img_viewer.image_viewer.load_pixmap(pixmap)
         # self.filter_manager.reset_filters()
         # self.filter_manager.apply_filters()
@@ -111,25 +113,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     @Slot(ImageItem)
     def on_image_label_clicked(self, img_item: ImageItem):
-        self.image_store.set_img_item(img_item)
-
-    @Slot(ImageItem)
-    def _on_edited_image_changed(self, edited_img_item: ImageItem):
-        """When single edited image in store is updated, update preview with that image"""
-        if edited_img_item.image.isNull():
-            self.edited_img_viewer.image_viewer.clear()
-            self.edited_img_viewer.bbox_overlay.clear_boxes()
-
-        pixmap = QPixmap.fromImage(edited_img_item.image)
-        self.edited_img_viewer.image_viewer.load_pixmap(pixmap)
-        # Trigger overlay repaint
-        self.edited_img_viewer.bbox_overlay.update()
-        # Clear old bounding boxes since image changed
-        self.edited_img_viewer.bbox_overlay.clear_boxes()
+        self.image_store.set_current_img_item(img_item)
 
     @Slot(list)
-    def on_edited_images_changed(self, img_items: list[ImageItem]):
-        """When edited image list is updated, update the edited thumb scroll area as well"""
+    def on_edited_images_changed(self, img_items: dict[str, ImageItem]):
+        """When edited image dict is updated, update the edited thumb scroll area as well"""
         while self.edited_thumb_layout.count():
             item = self.edited_thumb_layout.takeAt(0)
             w = item.widget()
@@ -138,14 +126,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         viewport_h = self.edited_thumb_scroll_area.viewport().height()
 
-        for img_item in img_items:
+        for img_item in img_items.values():
             label = ThumbLabel(img_item)
             self.edited_thumb_layout.addWidget(label)
             label.setFixedSize(100, viewport_h)
 
             qimg = img_item.image
-            pixmap = QPixmap.fromImage(qimg)
-            pixmap = pixmap.scaled(
+            pixmap = QPixmap.fromImage(qimg).scaled(
                 label.size(),
                 Qt.KeepAspectRatio,
                 Qt.SmoothTransformation
@@ -156,13 +143,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Whenever images list in store is updated, set the first image to edited image
         if len(img_items) > 0:
-            self.image_store.set_edited_img_item(img_items[0])
+            first_image = next(iter(img_items.values()))
+            self.image_store.set_current_img_item(first_image)
         else:
             self.image_store.clear_edited_images()
 
     @Slot(ImageItem)
     def on_edited_img_label_clicked(self, edited_img_item: ImageItem):
-        self.image_store.set_edited_img_item(edited_img_item)
+        self.image_store.set_current_img_item(edited_img_item)
 
     @Slot(list)
     def _on_ocr_changed(self, result: list):
@@ -174,11 +162,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # ===============================
     def _load_files(self, file_paths: list):
         """Load images files and set the list of imageItems to store. this does not update ui itself"""
-        image_list = []
+        image_dict = {}
         for file_path in file_paths:
+
             if file_path.lower().endswith((".png", ".jpg", ".jpeg")):
                 img_item = ImageItem(QImage(file_path), file_path)
-                image_list.append(img_item)
+                image_dict[img_item.id] = img_item
 
             elif file_path.lower().endswith(".pdf"):
                 with pymupdf.open(file_path) as doc:
@@ -193,7 +182,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             QImage.Format.Format_RGB888
                         ).copy()
                         img_item = ImageItem(qimage, file_path, page_num)
-                        image_list.append(img_item)
+                        image_dict[img_item.id] = img_item
 
         # Set the list of imageItems to store
-        self.image_store.add_img_items(image_list)
+        self.image_store.add_img_items(image_dict)

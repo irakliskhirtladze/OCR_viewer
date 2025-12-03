@@ -1,6 +1,6 @@
 import numpy as np
 from PySide6.QtCore import Signal, QObject, Slot
-from PySide6.QtGui import QImage
+from PySide6.QtGui import QImage, QPixmap
 
 from ui.generated.ui_mainwindow import Ui_MainWindow
 from models.image_store import ImageStore, ImageItem
@@ -15,7 +15,7 @@ class FilterManager(QObject):
         super().__init__()
         self.ui = ui
         self.image_store = image_store
-        self.edited_image = self.image_store.get_edited_images()
+        self.edited_images = self.image_store.get_edited_images()
 
         self.filters = [
             GreyFilter(self.ui),
@@ -36,31 +36,33 @@ class FilterManager(QObject):
     # ===================
     @Slot()
     def apply_filters(self):
-        """Apply filters on a single image and set it to edited image"""
-        # img_item_to_edit = Should be current image item shown on preview
+        """
+        Apply filters on a single original image and set it to edited image.
+        Note that filters must always be applied to original images to avoid double filtering of edited images.
+        """
+        current_img_item = self.image_store.get_current_img_item()
+        current_img_item_id = current_img_item.id
+        if not current_img_item_id:
+            return
 
-        cv_image = qimage_to_cv(img_item_to_edit.image)
+        # Get original and apply filters
+        original_img = self.image_store.get_img_items().get(current_img_item.id)
+        if not original_img:
+            return
+
+        cv_img = qimage_to_cv(original_img.image)
         for filt in self.filters:
-            cv_image = filt.apply_filter(cv_image)
+            cv_img = filt.apply_filter(cv_img)
+        qimg_edited = cv_to_qimage(cv_img)
 
-        qimg_processed = cv_to_qimage(cv_image)
-        qimg_item = ImageItem(qimg_processed, img_item_to_edit.path)
-        self.image_store.set_edited_img_item(qimg_item)
+        # Update viewer directly, don't set to store
+        pixmap = QPixmap.fromImage(qimg_edited)
+        self.ui.edited_img_viewer.image_viewer.load_pixmap(pixmap)
 
     @Slot()
     def apply_to_all_images(self):
         """Apply active filters to all original images in list"""
-        original_img_items = self.image_store.get_img_items()
-        edited_img_items = []
-        for img_item in original_img_items:
-            cv_image = qimage_to_cv(img_item.image)
-            for filt in self.filters:
-                cv_image = filt.apply_filter(cv_image)
-
-            qimg_processed = cv_to_qimage(cv_image)
-            edited_img_item = ImageItem(qimg_processed, img_item.path)
-            edited_img_items.append(edited_img_item)
-        self.image_store.add_edited_images(edited_img_items)
+        pass
 
     @Slot()
     def reset_filters(self):
