@@ -1,6 +1,7 @@
 import numpy as np
 from PySide6.QtCore import Signal, QObject, Slot
 from PySide6.QtGui import QImage, QPixmap
+from shapely.speedups import enabled
 
 from ui.generated.ui_mainwindow import Ui_MainWindow
 from models.image_store import ImageStore, ImageItem
@@ -22,6 +23,7 @@ class FilterManager(QObject):
             BinaryFilter(self.ui),
             InvertFilter(self.ui),
             MedianBlurFilter(self.ui),
+            DilateErodeFilter(self.ui),
         ]
 
         # Signal to slot binding
@@ -218,3 +220,65 @@ class MedianBlurFilter(BaseFilter):
     @Slot(int)
     def on_ksize_value_changed(self, value: int):
         self.paramsChanged.emit()
+
+
+class DilateErodeFilter(BaseFilter):
+    def __init__(self, ui: Ui_MainWindow):
+        super().__init__()
+        self.ui = ui
+        self.ui.dilate_erode_chbx.toggled.connect(self.on_checkbox_toggled)
+        self.ui.dilate_radio.clicked.connect(self.on_dilate_radio_clicked)
+        self.ui.erode_radio.clicked.connect(self.on_erode_radio_clicked)
+        self.ui.dilate_erode_ksize_spinbox.valueChanged.connect(self.on_ksize_value_changed)
+        self.ui.dilate_erode_iter_spinbox.valueChanged.connect(self.on_iter_value_changed)
+
+    def get_params(self) -> dict:
+        return {
+            "enabled": self.ui.dilate_erode_chbx.isChecked(),
+            "active_btn": "dilate" if self.ui.dilate_radio.isChecked() else "erode",
+            "k_size": (self.ui.dilate_erode_ksize_spinbox.value(), self.ui.dilate_erode_ksize_spinbox.value()),
+            "iteration": self.ui.dilate_erode_iter_spinbox.value(),
+        }
+
+    def apply_filter(self, img: np.ndarray) -> np.ndarray:
+        if self.get_params()["enabled"]:
+            if self.get_params()["active_btn"] == "dilate":
+                return image_processor.dilate(img, self.get_params()["k_size"], self.get_params()["iteration"])
+            elif self.get_params()["active_btn"] == "erode":
+                return image_processor.erode(img, self.get_params()["k_size"], self.get_params()["iteration"])
+        return img
+
+    def reset(self):
+        self.ui.dilate_erode_chbx.setChecked(False)
+        self.ui.dilate_radio.setChecked(True)
+        self.ui.dilate_radio.setEnabled(False)
+        self.ui.erode_radio.setEnabled(False)
+        self.ui.dilate_erode_ksize_spinbox.setValue(2)
+        self.ui.dilate_erode_ksize_spinbox.setEnabled(False)
+        self.ui.dilate_erode_iter_spinbox.setValue(1)
+        self.ui.dilate_erode_iter_spinbox.setEnabled(False)
+
+    @Slot(bool)
+    def on_checkbox_toggled(self, checked: bool):
+        self.ui.dilate_radio.setEnabled(checked)
+        self.ui.erode_radio.setEnabled(checked)
+        self.ui.dilate_erode_ksize_spinbox.setEnabled(checked)
+        self.ui.dilate_erode_iter_spinbox.setEnabled(checked)
+        self.paramsChanged.emit()
+
+    @Slot()
+    def on_dilate_radio_clicked(self):
+        self.paramsChanged.emit()
+
+    @Slot()
+    def on_erode_radio_clicked(self):
+        self.paramsChanged.emit()
+
+    @Slot()
+    def on_ksize_value_changed(self):
+        self.paramsChanged.emit()
+
+    @Slot()
+    def on_iter_value_changed(self):
+        self.paramsChanged.emit()
+

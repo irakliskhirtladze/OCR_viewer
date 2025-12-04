@@ -28,7 +28,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1090, 800)
+        MainWindow.resize(1088, 800)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
@@ -128,11 +128,6 @@ class Ui_MainWindow(object):
         self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_9.addItem(self.horizontalSpacer_3)
-
-        self.clear_all_edited_btn = QPushButton(self.frame_8)
-        self.clear_all_edited_btn.setObjectName(u"clear_all_edited_btn")
-
-        self.horizontalLayout_9.addWidget(self.clear_all_edited_btn)
 
 
         self.verticalLayout_11.addWidget(self.frame_8)
@@ -305,6 +300,7 @@ class Ui_MainWindow(object):
         self.dilate_radio = QRadioButton(self.frame_5)
         self.dilate_radio.setObjectName(u"dilate_radio")
         self.dilate_radio.setEnabled(False)
+        self.dilate_radio.setChecked(True)
 
         self.verticalLayout_8.addWidget(self.dilate_radio)
 
@@ -376,11 +372,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_12.setObjectName(u"horizontalLayout_12")
         self.apply_to_all_btn = QPushButton(self.frame_13)
         self.apply_to_all_btn.setObjectName(u"apply_to_all_btn")
+        self.apply_to_all_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_12.addWidget(self.apply_to_all_btn)
 
         self.reset_all_btn = QPushButton(self.frame_13)
         self.reset_all_btn.setObjectName(u"reset_all_btn")
+        self.reset_all_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_12.addWidget(self.reset_all_btn)
 
@@ -462,6 +460,7 @@ class Ui_MainWindow(object):
 
         self.run_ocr_btn = QPushButton(self.frame_9)
         self.run_ocr_btn.setObjectName(u"run_ocr_btn")
+        self.run_ocr_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_10.addWidget(self.run_ocr_btn)
 
@@ -508,7 +507,6 @@ class Ui_MainWindow(object):
         self.choose_files_btn.setText(QCoreApplication.translate("MainWindow", u"Choose files", None))
         self.clear_all_btn.setText(QCoreApplication.translate("MainWindow", u"Clear all", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Processed images", None))
-        self.clear_all_edited_btn.setText(QCoreApplication.translate("MainWindow", u"Clear all", None))
         self.grey_chbx.setText(QCoreApplication.translate("MainWindow", u"Grayscale", None))
         self.binarize_chbx.setText(QCoreApplication.translate("MainWindow", u"Binarize", None))
         self.binarize_val_lbl.setText(QCoreApplication.translate("MainWindow", u"127", None))

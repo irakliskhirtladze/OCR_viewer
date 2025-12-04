@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1090</width>
+    <width>1088</width>
     <height>800</height>
    </rect>
   </property>
@@ -240,13 +240,6 @@
                 </size>
                </property>
               </spacer>
-             </item>
-             <item>
-              <widget class="QPushButton" name="clear_all_edited_btn">
-               <property name="text">
-                <string>Clear all</string>
-               </property>
-              </widget>
              </item>
             </layout>
            </widget>
@@ -543,6 +536,9 @@
                      <property name="text">
                       <string>Dilate</string>
                      </property>
+                     <property name="checked">
+                      <bool>true</bool>
+                     </property>
                     </widget>
                    </item>
                    <item>
@@ -642,6 +638,9 @@
             <layout class="QHBoxLayout" name="horizontalLayout_12">
              <item>
               <widget class="QPushButton" name="apply_to_all_btn">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Aplly to all images</string>
                </property>
@@ -649,6 +648,9 @@
              </item>
              <item>
               <widget class="QPushButton" name="reset_all_btn">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Reset to all images</string>
                </property>
@@ -785,6 +787,9 @@
              </item>
              <item>
               <widget class="QPushButton" name="run_ocr_btn">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Run OCR</string>
                </property>
@@ -829,7 +834,11 @@
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="cursor">
+    <cursorShape>ArrowCursor</cursorShape>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>

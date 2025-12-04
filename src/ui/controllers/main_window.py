@@ -1,14 +1,16 @@
 import pymupdf
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, QThreadPool
 from PySide6.QtGui import QImage, Qt, QPixmap
 from PySide6.QtWidgets import QMainWindow, QHBoxLayout
 
+from ui.controllers.ocr_manager import OCRManager
 from ui.generated.ui_mainwindow import Ui_MainWindow
 from models.image_store import ImageStore, ImageItem
 from models.ocr_store import OCRStore
 from ui.controllers.filters import FilterManager
 from ui.widgets.common.thumbnail_label import ThumbLabel
 from utils.file_utils import open_file_dialog
+from utils.worker_manager import Worker
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -20,8 +22,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.image_store = ImageStore()
         self.ocr_store = OCRStore()
 
-        # Filters
+        # Filter manager
         self.filter_manager = FilterManager(self, self.image_store)
+
+        # ocr manager
+        self.ocr_manager = OCRManager(self)
 
         # Connect signals and slots
         self.choose_files_btn.clicked.connect(self.on_choose_files_clicked)
@@ -29,7 +34,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.image_store.imagesChanged.connect(self.on_images_changed)
         self.image_store.currentImageChanged.connect(self.on_current_image_changed)
-        self.image_store.currentImageChanged.connect(self.filter_manager.apply_filters)
         self.image_store.editedImagesChanged.connect(self.on_edited_images_changed)
 
         self.ocr_store.result_changed.connect(self._on_ocr_changed)
@@ -43,7 +47,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.edited_thumb_scroll_widget.setLayout(self.edited_thumb_layout)
 
     # ===============================
-    # Slots
+    #
     # ===============================
     @Slot(bool)
     def on_choose_files_clicked(self):
@@ -56,7 +60,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
 
         if file_paths:
-            self._load_files(file_paths)
+            # Show loading message
+            self.statusbar.showMessage("Loading images...")
+            
+            # Create worker for background loading
+            worker = Worker(self._load_files, file_paths)
+            worker.signals.result.connect(self._on_files_loaded)
+            worker.signals.error.connect(self._on_load_error)
+            
+            # Start worker in thread pool
+            QThreadPool.globalInstance().start(worker)
 
     @Slot(list)
     def on_images_changed(self, images: dict[str, ImageItem]):
@@ -100,11 +113,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if current_img_item.image.isNull():
             self.edited_img_viewer.image_viewer.clear()
             self.edited_img_viewer.bbox_overlay.clear_boxes()
+            return
 
         pixmap = QPixmap.fromImage(current_img_item.image)
         self.edited_img_viewer.image_viewer.load_pixmap(pixmap)
-        # self.filter_manager.reset_filters()
-        # self.filter_manager.apply_filters()
 
     @Slot()
     def on_clear_all_btn_clicked(self):
@@ -158,10 +170,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.edited_img_viewer.bbox_overlay.set_boxes(result)
 
     # ===============================
-    # other logic
+    # file loading
     # ===============================
-    def _load_files(self, file_paths: list):
-        """Load images files and set the list of imageItems to store. this does not update ui itself"""
+    def _load_files(self, file_paths: list) -> dict[str, ImageItem]:
+        """Load images files in background thread. Returns dict of ImageItems."""
         image_dict = {}
         for file_path in file_paths:
 
@@ -184,5 +196,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         img_item = ImageItem(qimage, file_path, page_num)
                         image_dict[img_item.id] = img_item
 
-        # Set the list of imageItems to store
+        return image_dict
+
+    @Slot(object)
+    def _on_files_loaded(self, image_dict: dict[str, ImageItem]):
+        """Called when file loading completes in background thread."""
         self.image_store.add_img_items(image_dict)
+        self.statusbar.showMessage(f"{len(image_dict)} images loaded.", 5000)
+
+    @Slot(tuple)
+    def _on_load_error(self, error_info):
+        """Called when file loading fails."""
+        exctype, value, traceback_str = error_info
+        self.statusbar.showMessage(f"Error loading files: {value}", 5000)
+        print(f"Error loading files:\n{traceback_str}")

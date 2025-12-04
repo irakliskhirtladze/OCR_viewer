@@ -79,6 +79,8 @@ def invert(image: np.ndarray):
 
 def to_binary(image: np.ndarray, threshold: int, max_value: int) -> np.ndarray:
     """Converts the image to binary"""
+    if not len(image.shape) == 2:
+        image = to_gray(image)
     return cv2.threshold(image, threshold, max_value, cv2.THRESH_BINARY)[1]
 
 
