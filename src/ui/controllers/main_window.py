@@ -5,8 +5,7 @@ from PySide6.QtWidgets import QMainWindow, QHBoxLayout
 
 from ui.controllers.ocr_manager import OCRManager
 from ui.generated.ui_mainwindow import Ui_MainWindow
-from models.image_store import ImageStore, ImageItem
-from models.ocr_store import OCRStore
+from models.data_store import DataStore, ImageItem
 from ui.controllers.filters import FilterManager
 from ui.widgets.common.thumbnail_label import ThumbLabel
 from utils.file_utils import open_file_dialog
@@ -18,25 +17,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
 
-        # Initialize stores
-        self.image_store = ImageStore()
-        self.ocr_store = OCRStore()
+        # Initialize store
+        self.data_store = DataStore()
 
         # Filter manager
-        self.filter_manager = FilterManager(self, self.image_store)
+        self.filter_manager = FilterManager(self, self.data_store)
 
         # ocr manager
-        self.ocr_manager = OCRManager(self)
+        self.ocr_manager = OCRManager(self, self.data_store)
 
         # Connect signals and slots
         self.choose_files_btn.clicked.connect(self.on_choose_files_clicked)
         self.clear_all_btn.clicked.connect(self.on_clear_all_btn_clicked)
 
-        self.image_store.imagesChanged.connect(self.on_images_changed)
-        self.image_store.currentImageChanged.connect(self.on_current_image_changed)
-        self.image_store.editedImagesChanged.connect(self.on_edited_images_changed)
-
-        self.ocr_store.result_changed.connect(self._on_ocr_changed)
+        self.data_store.imagesChanged.connect(self.on_images_changed)
+        self.data_store.currentImageChanged.connect(self.on_current_image_changed)
+        self.data_store.editedImagesChanged.connect(self.on_edited_images_changed)
 
         # Thumbnail scroller
         self.thumb_layout = QHBoxLayout()
@@ -103,9 +99,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Whenever images list in store is updated, set the first image to edited image
         if len(images) > 0:
             first_image = next(iter(images.values()))
-            self.image_store.set_current_img_item(first_image)
+            self.data_store.set_current_img_item(first_image)
         else:
-            self.image_store.clear_img_item()
+            self.data_store.clear_img_item()
 
     @Slot(ImageItem)
     def on_current_image_changed(self, current_img_item: ImageItem):
@@ -121,11 +117,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     @Slot()
     def on_clear_all_btn_clicked(self):
         """Clears all original images in store."""
-        self.image_store.clear_img_items()
+        self.data_store.clear_img_items()
 
     @Slot(ImageItem)
     def on_image_label_clicked(self, img_item: ImageItem):
-        self.image_store.set_current_img_item(img_item)
+        self.data_store.set_current_img_item(img_item)
 
     @Slot(list)
     def on_edited_images_changed(self, img_items: dict[str, ImageItem]):
@@ -156,13 +152,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Whenever images list in store is updated, set the first image to edited image
         if len(img_items) > 0:
             first_image = next(iter(img_items.values()))
-            self.image_store.set_current_img_item(first_image)
+            self.data_store.set_current_img_item(first_image)
         else:
-            self.image_store.clear_edited_images()
+            self.data_store.clear_edited_images()
 
     @Slot(ImageItem)
     def on_edited_img_label_clicked(self, edited_img_item: ImageItem):
-        self.image_store.set_current_img_item(edited_img_item)
+        self.data_store.set_current_img_item(edited_img_item)
 
     @Slot(list)
     def _on_ocr_changed(self, result: list):
@@ -201,7 +197,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     @Slot(object)
     def _on_files_loaded(self, image_dict: dict[str, ImageItem]):
         """Called when file loading completes in background thread."""
-        self.image_store.add_img_items(image_dict)
+        self.data_store.add_img_items(image_dict)
         self.statusbar.showMessage(f"{len(image_dict)} images loaded.", 5000)
 
     @Slot(tuple)
@@ -210,3 +206,5 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         exctype, value, traceback_str = error_info
         self.statusbar.showMessage(f"Error loading files: {value}", 5000)
         print(f"Error loading files:\n{traceback_str}")
+
+

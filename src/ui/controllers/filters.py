@@ -1,10 +1,9 @@
 import numpy as np
 from PySide6.QtCore import Signal, QObject, Slot
 from PySide6.QtGui import QImage, QPixmap
-from shapely.speedups import enabled
 
 from ui.generated.ui_mainwindow import Ui_MainWindow
-from models.image_store import ImageStore, ImageItem
+from models.data_store import DataStore, ImageItem
 from utils.image_converter import qimage_to_cv, cv_to_qimage
 from core import image_processor
 
@@ -12,11 +11,11 @@ from core import image_processor
 class FilterManager(QObject):
     """Manages the logic of filters"""
 
-    def __init__(self, ui: Ui_MainWindow, image_store: ImageStore):
+    def __init__(self, ui: Ui_MainWindow, data_store: DataStore):
         super().__init__()
         self.ui = ui
-        self.image_store = image_store
-        self.edited_images = self.image_store.get_edited_images()
+        self.data_store = data_store
+        self.edited_images = self.data_store.get_edited_images()
 
         self.filters = [
             GreyFilter(self.ui),
@@ -42,13 +41,13 @@ class FilterManager(QObject):
         Apply filters on a single original image and set it to edited image.
         Note that filters must always be applied to original images to avoid double filtering of edited images.
         """
-        current_img_item = self.image_store.get_current_img_item()
+        current_img_item = self.data_store.get_current_img_item()
         current_img_item_id = current_img_item.id
         if not current_img_item_id:
             return
 
         # Get original and apply filters
-        original_img = self.image_store.get_img_items().get(current_img_item.id)
+        original_img = self.data_store.get_img_items().get(current_img_item.id)
 
         cv_img = qimage_to_cv(original_img.image)
         for filt in self.filters:
@@ -62,11 +61,11 @@ class FilterManager(QObject):
     @Slot()
     def apply_to_all_images(self):
         """Apply active filters to all original images in list"""
-        img_items = self.image_store.get_img_items()
+        img_items = self.data_store.get_img_items()
         edited_img_items = {}
         for img_item in img_items.values():
             img_item_id = img_item.id
-            original_img_item = self.image_store.get_img_items().get(img_item_id)
+            original_img_item = self.data_store.get_img_items().get(img_item_id)
             cv_img = qimage_to_cv(original_img_item.image)
             for filt in self.filters:
                 cv_img = filt.apply_filter(cv_img)
@@ -74,7 +73,7 @@ class FilterManager(QObject):
             edited_img_item = ImageItem(qimg_edited, img_item.path, img_item.page)
             edited_img_items[edited_img_item.id] = edited_img_item
 
-        self.image_store.add_edited_images(edited_img_items)
+        self.data_store.add_edited_images(edited_img_items)
 
     @Slot()
     def reset_filters(self):

@@ -1,4 +1,4 @@
-def reconstruct_text(words: list[dict],
+def reconstruct_text(word_data: list[dict],
                      line_thresh: int = 10,
                      para_thresh: int = 25,
                      column_gap_thresh: int = 50,
@@ -16,17 +16,17 @@ def reconstruct_text(words: list[dict],
     Returns:
         Reconstructed text as string
     """
-    if not words:
+    if not word_data:
         return ""
 
     # Sort words top-to-bottom
-    words = sorted(words, key=lambda w: (w['top'], w['left']))
+    word_data = sorted(word_data, key=lambda w: (w['top'], w['left']))
 
     # Step 1: Group words into lines
     lines = []
     line = []
     line_top = None
-    for w in words:
+    for w in word_data:
         if line_top is None or abs(w['top'] - line_top) <= line_thresh:
             line.append(w)
             line_top = line_top or w['top']

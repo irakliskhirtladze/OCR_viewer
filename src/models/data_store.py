@@ -24,10 +24,21 @@ class ImageItem:
                 self.id = resolved_path
 
 
-class ImageStore(QObject):
+@dataclass
+class OCRItem:
+    """OCR result for a single image"""
+    image_id: str
+    word_data: list[dict]
+    text: str = ""
+    engine: str = ""
+    languages: tuple[str] = ()
+
+
+class DataStore(QObject):
     imagesChanged = Signal(dict)
     currentImageChanged = Signal(ImageItem)
     editedImagesChanged = Signal(dict)
+    ocrResultsChanged = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -35,6 +46,11 @@ class ImageStore(QObject):
         self._current_img_item = ImageItem(QImage(), "")
         self._edited_img_items: dict[str, ImageItem] = {}
 
+        self._ocr_items: dict[str, OCRItem] = {}
+
+    # =====================
+    # Image methods
+    # =====================
     # Dict of original image items where each pair is - id: ImageItem
     def add_img_items(self, img_items: dict[str, ImageItem]):
         self._img_items.update(img_items)
@@ -70,3 +86,19 @@ class ImageStore(QObject):
     def clear_edited_images(self):
         self._edited_img_items.clear()
         self.editedImagesChanged.emit(self._edited_img_items)
+
+    # =====================
+    # OCR methods
+    # =====================
+    def set_ocr_items(self, ocr_results: dict[str, OCRItem]):
+        """Set OCR word data for a specific edited image"""
+        self._ocr_items = ocr_results
+        self.ocrResultsChanged.emit(self._ocr_items)
+
+    def get_ocr_items(self) -> dict[str, OCRItem]:
+        return self._ocr_items
+
+    def clear_ocr_items(self):
+        self._ocr_items.clear()
+        self.ocrResultsChanged.emit(self._ocr_items)
+

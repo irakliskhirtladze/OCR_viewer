@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'mainwindow.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.10.0
+## Created by: Qt User Interface Compiler version 6.10.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -92,7 +92,7 @@ class Ui_MainWindow(object):
         self.thumb_scroll_area.setWidgetResizable(True)
         self.thumb_scroll_widget = QWidget()
         self.thumb_scroll_widget.setObjectName(u"thumb_scroll_widget")
-        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 363, 86))
+        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 367, 84))
         self.thumb_scroll_area.setWidget(self.thumb_scroll_widget)
 
         self.verticalLayout_2.addWidget(self.thumb_scroll_area)
@@ -129,6 +129,12 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_9.addItem(self.horizontalSpacer_3)
 
+        self.show_bboxes_btn = QPushButton(self.frame_8)
+        self.show_bboxes_btn.setObjectName(u"show_bboxes_btn")
+        self.show_bboxes_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        self.horizontalLayout_9.addWidget(self.show_bboxes_btn)
+
 
         self.verticalLayout_11.addWidget(self.frame_8)
 
@@ -141,7 +147,7 @@ class Ui_MainWindow(object):
         self.edited_thumb_scroll_area.setWidgetResizable(True)
         self.edited_thumb_scroll_widget = QWidget()
         self.edited_thumb_scroll_widget.setObjectName(u"edited_thumb_scroll_widget")
-        self.edited_thumb_scroll_widget.setGeometry(QRect(0, 0, 363, 86))
+        self.edited_thumb_scroll_widget.setGeometry(QRect(0, 0, 367, 84))
         self.edited_thumb_scroll_area.setWidget(self.edited_thumb_scroll_widget)
 
         self.verticalLayout_11.addWidget(self.edited_thumb_scroll_area)
@@ -494,6 +500,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
+        self.statusbar.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
@@ -507,6 +514,7 @@ class Ui_MainWindow(object):
         self.choose_files_btn.setText(QCoreApplication.translate("MainWindow", u"Choose files", None))
         self.clear_all_btn.setText(QCoreApplication.translate("MainWindow", u"Clear all", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Processed images", None))
+        self.show_bboxes_btn.setText(QCoreApplication.translate("MainWindow", u"Show BBoxes", None))
         self.grey_chbx.setText(QCoreApplication.translate("MainWindow", u"Grayscale", None))
         self.binarize_chbx.setText(QCoreApplication.translate("MainWindow", u"Binarize", None))
         self.binarize_val_lbl.setText(QCoreApplication.translate("MainWindow", u"127", None))

@@ -2,7 +2,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QScrollArea, QLabel
 
-from models.image_store import ImageItem
+from models.data_store import ImageItem
 
 
 class ThumbLabel(QLabel):
