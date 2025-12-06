@@ -50,7 +50,8 @@ class OCRItem:
 
 class DataStore(QObject):
     """Central data store for the application"""
-    imagesChanged = Signal(dict)
+    originalImagesChanged = Signal(dict)
+    editedImagesChanged = Signal(dict)
     currentImageChanged = Signal(ImageItem)
     ocrResultsChanged = Signal(dict)
 
@@ -68,14 +69,14 @@ class DataStore(QObject):
     # Dict of original image items where each pair is - id: ImageItem
     def add_img_items(self, img_items: dict[str, ImageItem]):
         self._img_items.update(img_items)
-        self.imagesChanged.emit(self._img_items)
+        self.originalImagesChanged.emit(self._img_items)
 
     def get_img_items(self) -> dict[str, ImageItem]:
         return self._img_items
 
     def clear_img_items(self):
         self._img_items.clear()
-        self.imagesChanged.emit(self._img_items)
+        self.originalImagesChanged.emit(self._img_items)
 
     # single current image needed for preview
     def set_current_img_item(self, img_item: ImageItem):
@@ -92,20 +93,22 @@ class DataStore(QObject):
     # dict of edited images using batch editing
     def add_edited_images(self, img_items: dict[str, ImageItem]):
         self._edited_img_items = img_items
-        self.imagesChanged.emit(self._edited_img_items)
+        self.editedImagesChanged.emit(self._edited_img_items)
 
     def get_edited_images(self) -> dict[str, ImageItem]:
         return self._edited_img_items
 
     def clear_edited_images(self):
         self._edited_img_items.clear()
-        self.imagesChanged.emit(self._img_items)
+        self.editedImagesChanged.emit(self._edited_img_items)
+        self.originalImagesChanged.emit(self._img_items)
 
     def clear_all(self):
         self._edited_img_items.clear()
         self._img_items.clear()
         self._current_img_item = ImageItem.empty()
-        self.imagesChanged.emit(self._img_items)
+        self._ocr_items.clear()
+        self.originalImagesChanged.emit(self._img_items)
         self.currentImageChanged.emit(self._current_img_item)
 
     # =====================

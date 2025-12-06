@@ -32,7 +32,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.choose_files_btn.clicked.connect(self.choose_files_btn_clicked)
         self.clear_all_btn.clicked.connect(self.clear_all_btn_clicked)
 
-        self.data_store.imagesChanged.connect(self.on_images_changed)
+        self.data_store.originalImagesChanged.connect(self.on_original_images_changed)
+        self.data_store.editedImagesChanged.connect(self.on_edited_images_changed)
         self.data_store.currentImageChanged.connect(self.on_current_image_changed)
 
         # Thumbnail scroller
@@ -64,20 +65,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # Start worker in thread pool
             QThreadPool.globalInstance().start(worker)
 
-    @Slot(list)
-    def on_images_changed(self, img_items: dict[str, ImageItem]):
-        """
-        Clear thumb scroll widget, and add current items to it as thumbnails.
-        Also set first image (if available) from list as single image in store.
-        """
-        # Clear thumbnails
+    @Slot(dict)
+    def on_original_images_changed(self, img_items: dict[str, ImageItem]):
+        """Handle original images loaded or cleared - rebuild thumbnails with originals."""
+        self._rebuild_thumbnails(img_items)
+
+        # Set current image from originals
+        current = self.data_store.get_current_img_item()
+        if not current.is_null() and current.id in img_items:
+            self.data_store.set_current_img_item(img_items[current.id])
+        elif img_items:
+            self.data_store.set_current_img_item(next(iter(img_items.values())))
+
+    @Slot(dict)
+    def on_edited_images_changed(self, img_items: dict[str, ImageItem]):
+        """Handle edited images applied - rebuild thumbnails with edited versions."""
+        if not img_items:
+            # Edited images cleared, originals will be shown via originalImagesChanged
+            return
+
+        self._rebuild_thumbnails(img_items)
+
+        # Set current image from edited set
+        current = self.data_store.get_current_img_item()
+        if not current.is_null() and current.id in img_items:
+            self.data_store.set_current_img_item(img_items[current.id])
+        elif img_items:
+            self.data_store.set_current_img_item(next(iter(img_items.values())))
+
+    def _rebuild_thumbnails(self, img_items: dict[str, ImageItem]):
+        """Clear and rebuild thumbnail widgets from given image items."""
+        # Clear existing thumbnails
         while self.thumb_layout.count():
             item = self.thumb_layout.takeAt(0)
-            w = item.widget()
-            if w is not None:
+            if w := item.widget():
                 w.deleteLater()
 
-        # Build thumbnails
+        # Build new thumbnails
         viewport_h = self.thumb_scroll_area.viewport().height()
         for img_item in img_items.values():
             label = ThumbLabel(img_item)
@@ -88,14 +112,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             pixmap = QPixmap.fromImage(qimg).scaled(label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
             label.setPixmap(pixmap)
             label.clicked.connect(self.image_label_clicked)
-
-        # Sync current image to new set
-        current_img_item = self.data_store.get_current_img_item()
-        if not current_img_item.is_null() and current_img_item.id in img_items:
-            self.data_store.set_current_img_item(img_items[current_img_item.id])
-        elif img_items:
-            first_image = next(iter(img_items.values()))
-            self.data_store.set_current_img_item(first_image)
 
     @Slot(ImageItem)
     def on_current_image_changed(self, current_img_item: ImageItem):
