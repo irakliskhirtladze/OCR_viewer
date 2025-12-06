@@ -55,15 +55,7 @@ class Ui_MainWindow(object):
         self.button_bar_cont.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_3 = QHBoxLayout(self.button_bar_cont)
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.label_3 = QLabel(self.button_bar_cont)
-        self.label_3.setObjectName(u"label_3")
-
-        self.horizontalLayout_3.addWidget(self.label_3)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout_3.addItem(self.horizontalSpacer)
-
+        self.horizontalLayout_3.setContentsMargins(5, 5, 5, 5)
         self.choose_files_btn = QPushButton(self.button_bar_cont)
         self.choose_files_btn.setObjectName(u"choose_files_btn")
         self.choose_files_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -80,6 +72,10 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_3.addWidget(self.clear_all_btn)
 
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_3.addItem(self.horizontalSpacer)
+
 
         self.verticalLayout_2.addWidget(self.button_bar_cont)
 
@@ -92,7 +88,7 @@ class Ui_MainWindow(object):
         self.thumb_scroll_area.setWidgetResizable(True)
         self.thumb_scroll_widget = QWidget()
         self.thumb_scroll_widget.setObjectName(u"thumb_scroll_widget")
-        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 367, 84))
+        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 432, 84))
         self.thumb_scroll_area.setWidget(self.thumb_scroll_widget)
 
         self.verticalLayout_2.addWidget(self.thumb_scroll_area)
@@ -111,46 +107,18 @@ class Ui_MainWindow(object):
         self.frame_7.setObjectName(u"frame_7")
         self.frame_7.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame_7.setFrameShadow(QFrame.Shadow.Raised)
-        self.verticalLayout_11 = QVBoxLayout(self.frame_7)
-        self.verticalLayout_11.setObjectName(u"verticalLayout_11")
-        self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
-        self.frame_8 = QFrame(self.frame_7)
-        self.frame_8.setObjectName(u"frame_8")
-        self.frame_8.setFrameShape(QFrame.Shape.StyledPanel)
-        self.frame_8.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_9 = QHBoxLayout(self.frame_8)
-        self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
-        self.label_4 = QLabel(self.frame_8)
-        self.label_4.setObjectName(u"label_4")
-
-        self.horizontalLayout_9.addWidget(self.label_4)
-
+        self.horizontalLayout_2 = QHBoxLayout(self.frame_7)
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(5, 5, 5, 5)
         self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.horizontalLayout_9.addItem(self.horizontalSpacer_3)
+        self.horizontalLayout_2.addItem(self.horizontalSpacer_3)
 
-        self.show_bboxes_btn = QPushButton(self.frame_8)
+        self.show_bboxes_btn = QPushButton(self.frame_7)
         self.show_bboxes_btn.setObjectName(u"show_bboxes_btn")
         self.show_bboxes_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
-        self.horizontalLayout_9.addWidget(self.show_bboxes_btn)
-
-
-        self.verticalLayout_11.addWidget(self.frame_8)
-
-        self.edited_thumb_scroll_area = HorizontalThumbnailScrollArea(self.frame_7)
-        self.edited_thumb_scroll_area.setObjectName(u"edited_thumb_scroll_area")
-        self.edited_thumb_scroll_area.setMinimumSize(QSize(0, 100))
-        self.edited_thumb_scroll_area.setMaximumSize(QSize(16777215, 100))
-        self.edited_thumb_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.edited_thumb_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        self.edited_thumb_scroll_area.setWidgetResizable(True)
-        self.edited_thumb_scroll_widget = QWidget()
-        self.edited_thumb_scroll_widget.setObjectName(u"edited_thumb_scroll_widget")
-        self.edited_thumb_scroll_widget.setGeometry(QRect(0, 0, 367, 84))
-        self.edited_thumb_scroll_area.setWidget(self.edited_thumb_scroll_widget)
-
-        self.verticalLayout_11.addWidget(self.edited_thumb_scroll_area)
+        self.horizontalLayout_2.addWidget(self.show_bboxes_btn)
 
 
         self.verticalLayout.addWidget(self.frame_7)
@@ -497,6 +465,9 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.text_cont)
 
+        self.horizontalLayout.setStretch(0, 3)
+        self.horizontalLayout.setStretch(1, 1)
+        self.horizontalLayout.setStretch(2, 2)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -510,10 +481,8 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
-        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Original images", None))
         self.choose_files_btn.setText(QCoreApplication.translate("MainWindow", u"Choose files", None))
         self.clear_all_btn.setText(QCoreApplication.translate("MainWindow", u"Clear all", None))
-        self.label_4.setText(QCoreApplication.translate("MainWindow", u"Processed images", None))
         self.show_bboxes_btn.setText(QCoreApplication.translate("MainWindow", u"Show BBoxes", None))
         self.grey_chbx.setText(QCoreApplication.translate("MainWindow", u"Grayscale", None))
         self.binarize_chbx.setText(QCoreApplication.translate("MainWindow", u"Binarize", None))

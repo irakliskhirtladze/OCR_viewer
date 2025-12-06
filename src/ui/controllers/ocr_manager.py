@@ -72,9 +72,8 @@ class OCRManager(object):
         edited_img_items = self.data_store.get_edited_images()
         ocr_items = {}
         for img_item in edited_img_items.values():
-            cv_img = qimage_to_cv(img_item.image)
             selected_lang = self.ui.lang_combo.currentText()
-            word_data = tesseract_word_data(cv_img, lang=self.tesseract_langs[selected_lang])
+            word_data = tesseract_word_data(img_item.image, lang=self.tesseract_langs[selected_lang])
             ocr_item = OCRItem(img_item.id, word_data)
             ocr_items[img_item.id] = ocr_item
 

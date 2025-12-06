@@ -1,27 +1,41 @@
 from pathlib import Path
-
+import numpy as np
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QImage
-
 from dataclasses import dataclass
+
+from utils.image_converter import cv_to_qimage
 
 
 @dataclass
 class ImageItem:
     """Wrapper class to store QImage and other metadata attrs"""
-    image: QImage
+    image: np.ndarray
     path: str
     page: int | None = None
     id: str = ""
 
     def __post_init__(self):
         """Auto-generate ID from path + page"""
-        if not self.id:
+        if not self.id and self.path:
             resolved_path = Path(self.path).resolve().as_posix()
             if self.page is not None:
                 self.id = f"{resolved_path}#page{self.page}"
             else:
                 self.id = resolved_path
+
+    def is_null(self) -> bool:
+        """Check if this is an empty/null image item"""
+        return not self.path or self.image is None or self.image.size == 0
+
+    def to_qimage(self) -> QImage:
+        """Return QImage"""
+        return cv_to_qimage(self.image)
+
+    @classmethod
+    def empty(cls) -> "ImageItem":
+        """Creates an empty/null ImageItem"""
+        return cls(image=np.array([]), path="")
 
 
 @dataclass
@@ -43,7 +57,7 @@ class DataStore(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._img_items: dict[str, ImageItem] = {}
-        self._current_img_item = ImageItem(QImage(), "")
+        self._current_img_item = ImageItem.empty()
         self._edited_img_items: dict[str, ImageItem] = {}
 
         self._ocr_items: dict[str, OCRItem] = {}
@@ -71,8 +85,8 @@ class DataStore(QObject):
     def get_current_img_item(self) -> ImageItem:
         return self._current_img_item
 
-    def clear_img_item(self):
-        self._current_img_item = ImageItem(QImage(), "")
+    def clear_current_img_item(self):
+        self._current_img_item = ImageItem.empty()
         self.currentImageChanged.emit(self._current_img_item)
 
     # dict of edited images using batch editing
