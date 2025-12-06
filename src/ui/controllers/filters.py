@@ -10,7 +10,6 @@ from core import image_processor
 
 class FilterManager(QObject):
     """Manages the logic of filters"""
-
     def __init__(self, ui: Ui_MainWindow, data_store: DataStore):
         super().__init__()
         self.ui = ui
@@ -77,7 +76,7 @@ class FilterManager(QObject):
         for filt in self.filters:
             filt.reset()
 
-        self.apply_to_all_images()
+        self.data_store.clear_edited_images()
 
 
 class BaseFilter(QObject):

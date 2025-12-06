@@ -51,7 +51,6 @@ class OCRManager(object):
             self.ui.statusbar.showMessage("No image has been processed for OCR", 5000)
             return
 
-        print(f"=======  {ocr_item_for_current_img.image_id}")
         text = reconstruct_text(ocr_item_for_current_img.word_data)
         self.ui.text_edit.clear()
         self.ui.text_edit.setText(text)

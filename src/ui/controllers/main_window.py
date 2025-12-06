@@ -34,7 +34,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.data_store.imagesChanged.connect(self.on_images_changed)
         self.data_store.currentImageChanged.connect(self.on_current_image_changed)
-        self.data_store.editedImagesChanged.connect(self.on_edited_images_changed)
 
         # Thumbnail scroller
         self.thumb_layout = QHBoxLayout()
@@ -71,34 +70,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Clear thumb scroll widget, and add current items to it as thumbnails.
         Also set first image (if available) from list as single image in store.
         """
+        # Clear thumbnails
         while self.thumb_layout.count():
             item = self.thumb_layout.takeAt(0)
             w = item.widget()
             if w is not None:
                 w.deleteLater()
 
+        # Build thumbnails
         viewport_h = self.thumb_scroll_area.viewport().height()
-
         for img_item in img_items.values():
             label = ThumbLabel(img_item)
             self.thumb_layout.addWidget(label)
             label.setFixedSize(100, viewport_h)
 
             qimg = img_item.to_qimage()
-            pixmap = QPixmap.fromImage(qimg).scaled(
-                label.size(),
-                Qt.KeepAspectRatio,
-                Qt.SmoothTransformation
-            )
+            pixmap = QPixmap.fromImage(qimg).scaled(label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
             label.setPixmap(pixmap)
-
             label.clicked.connect(self.image_label_clicked)
 
-        # Whenever images list in store is updated, set the first image as current image
+        # Sync current image to new set
         current_img_item = self.data_store.get_current_img_item()
-        if not current_img_item.is_null():
-            self.data_store.set_current_img_item(current_img_item)
-        else:
+        if not current_img_item.is_null() and current_img_item.id in img_items:
+            self.data_store.set_current_img_item(img_items[current_img_item.id])
+        elif img_items:
             first_image = next(iter(img_items.values()))
             self.data_store.set_current_img_item(first_image)
 
@@ -123,53 +118,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
 
         if reply == QMessageBox.Yes:
-            self.data_store.clear_img_items()
-            self.data_store.clear_edited_images()
-            self.data_store.clear_current_img_item()
+            self.data_store.clear_all()
             self.statusbar.showMessage("All images cleared.")
 
     @Slot(ImageItem)
     def image_label_clicked(self, img_item: ImageItem):
         self.data_store.set_current_img_item(img_item)
-
-    @Slot(list)
-    def on_edited_images_changed(self, edited_img_items: dict[str, ImageItem]):
-        """When edited image dict is updated, update the edited thumb scroll area as well"""
-        while self.thumb_layout.count():
-            item = self.thumb_layout.takeAt(0)
-            w = item.widget()
-            if w is not None:
-                w.deleteLater()
-
-        viewport_h = self.thumb_scroll_area.viewport().height()
-
-        for img_item in edited_img_items.values():
-            label = ThumbLabel(img_item)
-            self.thumb_layout.addWidget(label)
-            label.setFixedSize(100, viewport_h)
-
-            qimg = img_item.to_qimage()
-            pixmap = QPixmap.fromImage(qimg).scaled(
-                label.size(),
-                Qt.KeepAspectRatio,
-                Qt.SmoothTransformation
-            )
-            label.setPixmap(pixmap)
-
-            label.clicked.connect(self.edited_img_label_clicked)
-
-        # Whenever edited images list in store is updated, set the current image too
-        current_img_item = self.data_store.get_current_img_item()
-        if not current_img_item.is_null():
-            edited_img_item = self.data_store.get_edited_images().get(current_img_item.id, ImageItem.empty())
-            self.data_store.set_current_img_item(edited_img_item)
-        else:
-            first_image = next(iter(edited_img_items.values()))
-            self.data_store.set_current_img_item(first_image)
-
-    @Slot(ImageItem)
-    def edited_img_label_clicked(self, edited_img_item: ImageItem):
-        self.data_store.set_current_img_item(edited_img_item)
 
     @Slot(list)
     def _on_ocr_changed(self, result: list):

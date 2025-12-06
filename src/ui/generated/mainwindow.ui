@@ -603,7 +603,7 @@
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="text">
-                <string>Aplly to all images</string>
+                <string>Aplly filters to all</string>
                </property>
               </widget>
              </item>
@@ -613,7 +613,7 @@
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="text">
-                <string>Reset to all images</string>
+                <string>Reset filters for all</string>
                </property>
               </widget>
              </item>

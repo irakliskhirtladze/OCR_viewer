@@ -49,9 +49,9 @@ class OCRItem:
 
 
 class DataStore(QObject):
+    """Central data store for the application"""
     imagesChanged = Signal(dict)
     currentImageChanged = Signal(ImageItem)
-    editedImagesChanged = Signal(dict)
     ocrResultsChanged = Signal(dict)
 
     def __init__(self, parent=None):
@@ -92,14 +92,21 @@ class DataStore(QObject):
     # dict of edited images using batch editing
     def add_edited_images(self, img_items: dict[str, ImageItem]):
         self._edited_img_items = img_items
-        self.editedImagesChanged.emit(self._edited_img_items)
+        self.imagesChanged.emit(self._edited_img_items)
 
     def get_edited_images(self) -> dict[str, ImageItem]:
         return self._edited_img_items
 
     def clear_edited_images(self):
         self._edited_img_items.clear()
-        self.editedImagesChanged.emit(self._edited_img_items)
+        self.imagesChanged.emit(self._img_items)
+
+    def clear_all(self):
+        self._edited_img_items.clear()
+        self._img_items.clear()
+        self._current_img_item = ImageItem.empty()
+        self.imagesChanged.emit(self._img_items)
+        self.currentImageChanged.emit(self._current_img_item)
 
     # =====================
     # OCR methods
