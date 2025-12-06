@@ -1,7 +1,9 @@
+import numpy as np
+import cv2
 import pymupdf
 from PySide6.QtCore import Slot, QThreadPool
 from PySide6.QtGui import QImage, Qt, QPixmap
-from PySide6.QtWidgets import QMainWindow, QHBoxLayout
+from PySide6.QtWidgets import QMainWindow, QHBoxLayout, QErrorMessage, QMessageBox
 
 from ui.controllers.ocr_manager import OCRManager
 from ui.generated.ui_mainwindow import Ui_MainWindow
@@ -27,26 +29,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ocr_manager = OCRManager(self, self.data_store)
 
         # Connect signals and slots
-        self.choose_files_btn.clicked.connect(self.on_choose_files_clicked)
-        self.clear_all_btn.clicked.connect(self.on_clear_all_btn_clicked)
+        self.choose_files_btn.clicked.connect(self.choose_files_btn_clicked)
+        self.clear_all_btn.clicked.connect(self.clear_all_btn_clicked)
 
-        self.data_store.imagesChanged.connect(self.on_images_changed)
-        self.data_store.currentImageChanged.connect(self.on_current_image_changed)
+        self.data_store.originalImagesChanged.connect(self.on_original_images_changed)
         self.data_store.editedImagesChanged.connect(self.on_edited_images_changed)
+        self.data_store.currentImageChanged.connect(self.on_current_image_changed)
 
         # Thumbnail scroller
         self.thumb_layout = QHBoxLayout()
         self.thumb_scroll_widget.setLayout(self.thumb_layout)
 
-        # Edited thumbnail scroller
-        self.edited_thumb_layout = QHBoxLayout()
-        self.edited_thumb_scroll_widget.setLayout(self.edited_thumb_layout)
-
     # ===============================
     #
     # ===============================
     @Slot(bool)
-    def on_choose_files_clicked(self):
+    def choose_files_btn_clicked(self):
         """Open file dialog to choose an image."""
         file_paths: list[str] | None = open_file_dialog(
             parent=self,
@@ -67,98 +65,81 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # Start worker in thread pool
             QThreadPool.globalInstance().start(worker)
 
-    @Slot(list)
-    def on_images_changed(self, images: dict[str, ImageItem]):
-        """
-        Clear thumb scroll widget, and add current items to it as thumbnails.
-        Also set first image (if available) from list as single image in store.
-        """
+    @Slot(dict)
+    def on_original_images_changed(self, img_items: dict[str, ImageItem]):
+        """Handle original images loaded or cleared - rebuild thumbnails with originals."""
+        self._rebuild_thumbnails(img_items)
+
+        # Set current image from originals
+        current = self.data_store.get_current_img_item()
+        if not current.is_null() and current.id in img_items:
+            self.data_store.set_current_img_item(img_items[current.id])
+        elif img_items:
+            self.data_store.set_current_img_item(next(iter(img_items.values())))
+
+    @Slot(dict)
+    def on_edited_images_changed(self, img_items: dict[str, ImageItem]):
+        """Handle edited images applied - rebuild thumbnails with edited versions."""
+        if not img_items:
+            # Edited images cleared, originals will be shown via originalImagesChanged
+            return
+
+        self._rebuild_thumbnails(img_items)
+
+        # Set current image from edited set
+        current = self.data_store.get_current_img_item()
+        if not current.is_null() and current.id in img_items:
+            self.data_store.set_current_img_item(img_items[current.id])
+        elif img_items:
+            self.data_store.set_current_img_item(next(iter(img_items.values())))
+
+    def _rebuild_thumbnails(self, img_items: dict[str, ImageItem]):
+        """Clear and rebuild thumbnail widgets from given image items."""
+        # Clear existing thumbnails
         while self.thumb_layout.count():
             item = self.thumb_layout.takeAt(0)
-            w = item.widget()
-            if w is not None:
+            if w := item.widget():
                 w.deleteLater()
 
+        # Build new thumbnails
         viewport_h = self.thumb_scroll_area.viewport().height()
-
-        for img_item in images.values():
+        for img_item in img_items.values():
             label = ThumbLabel(img_item)
             self.thumb_layout.addWidget(label)
             label.setFixedSize(100, viewport_h)
 
-            qimg = img_item.image
-            pixmap = QPixmap.fromImage(qimg).scaled(
-                label.size(),
-                Qt.KeepAspectRatio,
-                Qt.SmoothTransformation
-            )
+            qimg = img_item.to_qimage()
+            pixmap = QPixmap.fromImage(qimg).scaled(label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
             label.setPixmap(pixmap)
-
-            label.clicked.connect(self.on_image_label_clicked)
-
-        # Whenever images list in store is updated, set the first image to edited image
-        if len(images) > 0:
-            first_image = next(iter(images.values()))
-            self.data_store.set_current_img_item(first_image)
-        else:
-            self.data_store.clear_img_item()
+            label.clicked.connect(self.image_label_clicked)
 
     @Slot(ImageItem)
     def on_current_image_changed(self, current_img_item: ImageItem):
         """When current image in store is updated, update preview with that image"""
-        if current_img_item.image.isNull():
+        if current_img_item.is_null():
             self.edited_img_viewer.image_viewer.clear()
             self.edited_img_viewer.bbox_overlay.clear_boxes()
             return
 
-        pixmap = QPixmap.fromImage(current_img_item.image)
+        pixmap = QPixmap.fromImage(current_img_item.to_qimage())
         self.edited_img_viewer.image_viewer.load_pixmap(pixmap)
 
     @Slot()
-    def on_clear_all_btn_clicked(self):
-        """Clears all original images in store."""
-        self.data_store.clear_img_items()
+    def clear_all_btn_clicked(self):
+        """Clears all images in store."""
+        reply = QMessageBox.question(
+            self,
+            "Clear all images",
+            "Are you sure you want to clear all images?",
+        )
+
+        if reply == QMessageBox.Yes:
+            self.data_store.clear_all()
+            self.statusbar.showMessage("All images cleared.")
 
     @Slot(ImageItem)
-    def on_image_label_clicked(self, img_item: ImageItem):
+    def image_label_clicked(self, img_item: ImageItem):
         self.data_store.set_current_img_item(img_item)
-
-    @Slot(list)
-    def on_edited_images_changed(self, img_items: dict[str, ImageItem]):
-        """When edited image dict is updated, update the edited thumb scroll area as well"""
-        while self.edited_thumb_layout.count():
-            item = self.edited_thumb_layout.takeAt(0)
-            w = item.widget()
-            if w is not None:
-                w.deleteLater()
-
-        viewport_h = self.edited_thumb_scroll_area.viewport().height()
-
-        for img_item in img_items.values():
-            label = ThumbLabel(img_item)
-            self.edited_thumb_layout.addWidget(label)
-            label.setFixedSize(100, viewport_h)
-
-            qimg = img_item.image
-            pixmap = QPixmap.fromImage(qimg).scaled(
-                label.size(),
-                Qt.KeepAspectRatio,
-                Qt.SmoothTransformation
-            )
-            label.setPixmap(pixmap)
-
-            label.clicked.connect(self.on_edited_img_label_clicked)
-
-        # Whenever images list in store is updated, set the first image to edited image
-        if len(img_items) > 0:
-            first_image = next(iter(img_items.values()))
-            self.data_store.set_current_img_item(first_image)
-        else:
-            self.data_store.clear_edited_images()
-
-    @Slot(ImageItem)
-    def on_edited_img_label_clicked(self, edited_img_item: ImageItem):
-        self.data_store.set_current_img_item(edited_img_item)
 
     @Slot(list)
     def _on_ocr_changed(self, result: list):
@@ -170,11 +151,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # ===============================
     def _load_files(self, file_paths: list) -> dict[str, ImageItem]:
         """Load images files in background thread. Returns dict of ImageItems."""
+        self.choose_files_btn.setEnabled(False)
+        self.clear_all_btn.setEnabled(False)
         image_dict = {}
         for file_path in file_paths:
-
             if file_path.lower().endswith((".png", ".jpg", ".jpeg")):
-                img_item = ImageItem(QImage(file_path), file_path)
+                cv_img = cv2.imread(file_path)
+                img_item = ImageItem(cv_img, file_path)
                 image_dict[img_item.id] = img_item
 
             elif file_path.lower().endswith(".pdf"):
@@ -182,14 +165,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for page_num in range(len(doc)):
                         page = doc.load_page(page_num)
                         pix = page.get_pixmap(alpha=False)
-                        qimage = QImage(
-                            pix.samples,
-                            pix.width,
-                            pix.height,
-                            pix.stride,
-                            QImage.Format.Format_RGB888
-                        ).copy()
-                        img_item = ImageItem(qimage, file_path, page_num)
+                        cv_img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, 3)
+                        cv_img = cv2.cvtColor(cv_img, cv2.COLOR_RGB2BGR)
+                        img_item = ImageItem(cv_img, file_path, page_num)
                         image_dict[img_item.id] = img_item
 
         return image_dict
@@ -198,6 +176,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _on_files_loaded(self, image_dict: dict[str, ImageItem]):
         """Called when file loading completes in background thread."""
         self.data_store.add_img_items(image_dict)
+        self.choose_files_btn.setEnabled(True)
+        self.clear_all_btn.setEnabled(True)
         self.statusbar.showMessage(f"{len(image_dict)} images loaded.", 5000)
 
     @Slot(tuple)
