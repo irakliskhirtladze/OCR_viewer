@@ -38,6 +38,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Thumbnail scroller
         self.thumb_layout = QHBoxLayout()
+        self.thumb_layout.setContentsMargins(0, 0, 0, 0)
+        self.thumb_layout.setSpacing(5)
         self.thumb_scroll_widget.setLayout(self.thumb_layout)
 
     # ===============================
@@ -103,10 +105,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Build new thumbnails
         viewport_h = self.thumb_scroll_area.viewport().height()
+        # scrollbar_h = 17  # 12px scrollbar + 5px margin
         for img_item in img_items.values():
             label = ThumbLabel(img_item)
             self.thumb_layout.addWidget(label)
-            label.setFixedSize(100, viewport_h)
+            label.setFixedSize(150, viewport_h)
 
             qimg = img_item.to_qimage()
             pixmap = QPixmap.fromImage(qimg).scaled(label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)

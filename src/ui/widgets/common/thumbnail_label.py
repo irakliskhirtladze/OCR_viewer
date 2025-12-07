@@ -10,9 +10,9 @@ class ThumbLabel(QLabel):
 
     def __init__(self, img_item: ImageItem, parent=None):
         super().__init__(parent)
+        self.setObjectName('ThumbLabel')
         self.img_item = img_item
         self.setCursor(Qt.PointingHandCursor)
-        self.setStyleSheet("background-color: green")
         self.setAlignment(Qt.AlignCenter)
 
     def mousePressEvent(self, event):

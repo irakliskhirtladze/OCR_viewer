@@ -81,14 +81,14 @@ class Ui_MainWindow(object):
 
         self.thumb_scroll_area = HorizontalThumbnailScrollArea(self.file_load_cont)
         self.thumb_scroll_area.setObjectName(u"thumb_scroll_area")
-        self.thumb_scroll_area.setMinimumSize(QSize(0, 100))
-        self.thumb_scroll_area.setMaximumSize(QSize(16777215, 100))
+        self.thumb_scroll_area.setMinimumSize(QSize(0, 150))
+        self.thumb_scroll_area.setMaximumSize(QSize(16777215, 150))
         self.thumb_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.thumb_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.thumb_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.thumb_scroll_area.setWidgetResizable(True)
         self.thumb_scroll_widget = QWidget()
         self.thumb_scroll_widget.setObjectName(u"thumb_scroll_widget")
-        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 432, 84))
+        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 443, 146))
         self.thumb_scroll_area.setWidget(self.thumb_scroll_widget)
 
         self.verticalLayout_2.addWidget(self.thumb_scroll_area)
@@ -116,6 +116,7 @@ class Ui_MainWindow(object):
 
         self.show_bboxes_btn = QPushButton(self.frame_7)
         self.show_bboxes_btn.setObjectName(u"show_bboxes_btn")
+        self.show_bboxes_btn.setEnabled(False)
         self.show_bboxes_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_2.addWidget(self.show_bboxes_btn)
@@ -139,6 +140,7 @@ class Ui_MainWindow(object):
         self.filter_cont.setFrameShape(QFrame.Shape.StyledPanel)
         self.filter_cont.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_4 = QVBoxLayout(self.filter_cont)
+        self.verticalLayout_4.setSpacing(15)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.grey_filter = QFrame(self.filter_cont)
@@ -265,6 +267,7 @@ class Ui_MainWindow(object):
         self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_8 = QHBoxLayout(self.frame_3)
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
+        self.horizontalLayout_8.setContentsMargins(0, 0, 0, 0)
         self.frame_5 = QFrame(self.frame_3)
         self.frame_5.setObjectName(u"frame_5")
         self.frame_5.setFrameShape(QFrame.Shape.StyledPanel)
@@ -434,6 +437,7 @@ class Ui_MainWindow(object):
 
         self.run_ocr_btn = QPushButton(self.frame_9)
         self.run_ocr_btn.setObjectName(u"run_ocr_btn")
+        self.run_ocr_btn.setEnabled(False)
         self.run_ocr_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_10.addWidget(self.run_ocr_btn)
@@ -495,8 +499,8 @@ class Ui_MainWindow(object):
         self.erode_radio.setText(QCoreApplication.translate("MainWindow", u"Erode", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"K size", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Iteration", None))
-        self.apply_to_all_btn.setText(QCoreApplication.translate("MainWindow", u"Aplly to all images", None))
-        self.reset_all_btn.setText(QCoreApplication.translate("MainWindow", u"Reset to all images", None))
+        self.apply_to_all_btn.setText(QCoreApplication.translate("MainWindow", u"Aplly filters to all", None))
+        self.reset_all_btn.setText(QCoreApplication.translate("MainWindow", u"Reset filters for all", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"Choose OCR engine", None))
         self.ocr_engine_combo.setItemText(0, QCoreApplication.translate("MainWindow", u"Tesseract", None))
         self.ocr_engine_combo.setItemText(1, QCoreApplication.translate("MainWindow", u"EasyOCR", None))

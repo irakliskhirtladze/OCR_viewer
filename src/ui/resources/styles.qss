@@ -1,10 +1,21 @@
-QFrame {
-    border: none;
-    padding: 0px;
-    background-color: rgb(45, 45, 45);
+/* ========== WIDGET ========== */
+QWidget{
+    /* background-color: rgb(30, 30, 30); */
 }
 
 
-QScrollArea {
-    border: 1px solid grey;
+/* ========== FRAME ========== */
+QFrame{
+    border: none;
+    padding: 0px;
+    /* background-color: rgb(45, 45, 45); */
+}
+QFrame#ImageViewer{
+    /* background-color: rgb(97, 97, 97); */
+}
+
+
+/* ========== SLIDER ========== */
+QSlider {
+    background: transparent;
 }
