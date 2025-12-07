@@ -84,11 +84,11 @@ class Ui_MainWindow(object):
         self.thumb_scroll_area.setMinimumSize(QSize(0, 150))
         self.thumb_scroll_area.setMaximumSize(QSize(16777215, 150))
         self.thumb_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.thumb_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.thumb_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.thumb_scroll_area.setWidgetResizable(True)
         self.thumb_scroll_widget = QWidget()
         self.thumb_scroll_widget.setObjectName(u"thumb_scroll_widget")
-        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 443, 146))
+        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 437, 134))
         self.thumb_scroll_area.setWidget(self.thumb_scroll_widget)
 
         self.verticalLayout_2.addWidget(self.thumb_scroll_area)
@@ -128,6 +128,13 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.left_cont)
 
+        self.line = QFrame(self.centralwidget)
+        self.line.setObjectName(u"line")
+        self.line.setFrameShape(QFrame.Shape.VLine)
+        self.line.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.horizontalLayout.addWidget(self.line)
+
         self.control_cont = QFrame(self.centralwidget)
         self.control_cont.setObjectName(u"control_cont")
         self.control_cont.setFrameShape(QFrame.Shape.StyledPanel)
@@ -140,7 +147,7 @@ class Ui_MainWindow(object):
         self.filter_cont.setFrameShape(QFrame.Shape.StyledPanel)
         self.filter_cont.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_4 = QVBoxLayout(self.filter_cont)
-        self.verticalLayout_4.setSpacing(15)
+        self.verticalLayout_4.setSpacing(5)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.grey_filter = QFrame(self.filter_cont)
@@ -156,6 +163,13 @@ class Ui_MainWindow(object):
 
 
         self.verticalLayout_4.addWidget(self.grey_filter)
+
+        self.line_2 = QFrame(self.filter_cont)
+        self.line_2.setObjectName(u"line_2")
+        self.line_2.setFrameShape(QFrame.Shape.HLine)
+        self.line_2.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.verticalLayout_4.addWidget(self.line_2)
 
         self.binary_filter = QFrame(self.filter_cont)
         self.binary_filter.setObjectName(u"binary_filter")
@@ -198,6 +212,13 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.binary_filter)
 
+        self.line_3 = QFrame(self.filter_cont)
+        self.line_3.setObjectName(u"line_3")
+        self.line_3.setFrameShape(QFrame.Shape.HLine)
+        self.line_3.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.verticalLayout_4.addWidget(self.line_3)
+
         self.invert_filter = QFrame(self.filter_cont)
         self.invert_filter.setObjectName(u"invert_filter")
         self.invert_filter.setFrameShape(QFrame.Shape.StyledPanel)
@@ -211,6 +232,13 @@ class Ui_MainWindow(object):
 
 
         self.verticalLayout_4.addWidget(self.invert_filter)
+
+        self.line_4 = QFrame(self.filter_cont)
+        self.line_4.setObjectName(u"line_4")
+        self.line_4.setFrameShape(QFrame.Shape.HLine)
+        self.line_4.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.verticalLayout_4.addWidget(self.line_4)
 
         self.median_filter = QFrame(self.filter_cont)
         self.median_filter.setObjectName(u"median_filter")
@@ -249,6 +277,13 @@ class Ui_MainWindow(object):
 
 
         self.verticalLayout_4.addWidget(self.median_filter)
+
+        self.line_5 = QFrame(self.filter_cont)
+        self.line_5.setObjectName(u"line_5")
+        self.line_5.setFrameShape(QFrame.Shape.HLine)
+        self.line_5.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.verticalLayout_4.addWidget(self.line_5)
 
         self.dilate_erode_filter = QFrame(self.filter_cont)
         self.dilate_erode_filter.setObjectName(u"dilate_erode_filter")
@@ -340,6 +375,13 @@ class Ui_MainWindow(object):
 
 
         self.verticalLayout_4.addWidget(self.dilate_erode_filter)
+
+        self.line_6 = QFrame(self.filter_cont)
+        self.line_6.setObjectName(u"line_6")
+        self.line_6.setFrameShape(QFrame.Shape.HLine)
+        self.line_6.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.verticalLayout_4.addWidget(self.line_6)
 
         self.frame_13 = QFrame(self.filter_cont)
         self.frame_13.setObjectName(u"frame_13")
@@ -470,8 +512,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addWidget(self.text_cont)
 
         self.horizontalLayout.setStretch(0, 3)
-        self.horizontalLayout.setStretch(1, 1)
-        self.horizontalLayout.setStretch(2, 2)
+        self.horizontalLayout.setStretch(2, 1)
+        self.horizontalLayout.setStretch(3, 2)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -499,7 +541,7 @@ class Ui_MainWindow(object):
         self.erode_radio.setText(QCoreApplication.translate("MainWindow", u"Erode", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"K size", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Iteration", None))
-        self.apply_to_all_btn.setText(QCoreApplication.translate("MainWindow", u"Aplly filters to all", None))
+        self.apply_to_all_btn.setText(QCoreApplication.translate("MainWindow", u"Apply filters to all", None))
         self.reset_all_btn.setText(QCoreApplication.translate("MainWindow", u"Reset filters for all", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"Choose OCR engine", None))
         self.ocr_engine_combo.setItemText(0, QCoreApplication.translate("MainWindow", u"Tesseract", None))

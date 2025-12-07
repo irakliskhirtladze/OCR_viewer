@@ -1,9 +1,6 @@
-import numpy as np
-import cv2
-import pymupdf
 from PySide6.QtCore import Slot, QThreadPool
 from PySide6.QtGui import QImage, Qt, QPixmap
-from PySide6.QtWidgets import QMainWindow, QHBoxLayout, QErrorMessage, QMessageBox
+from PySide6.QtWidgets import QMainWindow, QHBoxLayout, QErrorMessage, QMessageBox, QProgressDialog
 
 from ui.controllers.ocr_manager import OCRManager
 from ui.generated.ui_mainwindow import Ui_MainWindow
@@ -11,7 +8,7 @@ from models.data_store import DataStore, ImageItem
 from ui.controllers.filters import FilterManager
 from ui.widgets.common.thumbnail_label import ThumbLabel
 from utils.file_utils import open_file_dialog
-from utils.worker_manager import Worker
+from ui.workers.file_loader import FileLoaderThread
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -42,8 +39,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.thumb_layout.setSpacing(5)
         self.thumb_scroll_widget.setLayout(self.thumb_layout)
 
+        # File loader thread reference
+        self._file_loader: FileLoaderThread | None = None
+        self._progress_dialog: QProgressDialog | None = None
+
     # ===============================
-    #
+    # file loading
     # ===============================
     @Slot(bool)
     def choose_files_btn_clicked(self):
@@ -56,17 +57,67 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
 
         if file_paths:
-            # Show loading message
-            self.statusbar.showMessage("Loading images...")
-            
-            # Create worker for background loading
-            worker = Worker(self._load_files, file_paths)
-            worker.signals.result.connect(self._on_files_loaded)
-            worker.signals.error.connect(self._on_load_error)
-            
-            # Start worker in thread pool
-            QThreadPool.globalInstance().start(worker)
+            self._start_file_loading(file_paths)
 
+    def _start_file_loading(self, file_paths: list[str]):
+        """Start background file loading with progress dialog."""
+        # Create progress dialog
+        self._progress_dialog = QProgressDialog("Loading images...", "Cancel", 0, 0, self)
+        self._progress_dialog.setWindowTitle("Loading")
+        self._progress_dialog.setWindowModality(Qt.WindowModal)
+        self._progress_dialog.setMinimumDuration(0)
+        self._progress_dialog.canceled.connect(self._on_loading_cancelled)
+
+        # Create and start worker thread
+        self._file_loader = FileLoaderThread(file_paths, self)
+        self._file_loader.progress.connect(self._on_loading_progress)
+        self._file_loader.finished_loading.connect(self._on_files_loaded)
+        self._file_loader.error.connect(self._on_load_error)
+        self._file_loader.start()
+
+    @Slot(int, int, str)
+    def _on_loading_progress(self, current: int, total: int, filename: str):
+        """Update progress dialog from worker thread signal."""
+        if self._progress_dialog is not None:
+            self._progress_dialog.setMaximum(total)
+            self._progress_dialog.setValue(current)
+            self._progress_dialog.setLabelText(f"Loading {filename}...")
+
+    @Slot()
+    def _on_loading_cancelled(self):
+        """Handle user cancelling the load operation."""
+        if self._file_loader:
+            self._file_loader.cancel()
+            self._file_loader.wait()  # Wait for thread to finish
+        self._cleanup_loading()
+        self.statusbar.showMessage("Loading cancelled.", 5000)
+
+    @Slot(dict)
+    def _on_files_loaded(self, image_dict: dict[str, ImageItem]):
+        """Called when file loading completes."""
+        self._cleanup_loading()
+        if image_dict:
+            self.data_store.add_img_items(image_dict)
+            self.statusbar.showMessage(f"{len(image_dict)} images loaded.", 5000)
+        else:
+            self.statusbar.showMessage("No images loaded.", 5000)
+
+    @Slot(str)
+    def _on_load_error(self, error_msg: str):
+        """Called when file loading fails."""
+        self._cleanup_loading()
+        self.statusbar.showMessage(f"Error: {error_msg}", 5000)
+
+    def _cleanup_loading(self):
+        """Clean up after loading completes or is cancelled."""
+        if self._progress_dialog:
+            self._progress_dialog.close()
+            self._progress_dialog = None
+        self._file_loader = None
+
+    # ===============================
+    # Other logic
+    # ===============================
     @Slot(dict)
     def on_original_images_changed(self, img_items: dict[str, ImageItem]):
         """Handle original images loaded or cleared - rebuild thumbnails with originals."""
@@ -148,46 +199,5 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _on_ocr_changed(self, result: list):
         """Update bounding boxes when OCR results change."""
         self.edited_img_viewer.bbox_overlay.set_boxes(result)
-
-    # ===============================
-    # file loading
-    # ===============================
-    def _load_files(self, file_paths: list) -> dict[str, ImageItem]:
-        """Load images files in background thread. Returns dict of ImageItems."""
-        self.choose_files_btn.setEnabled(False)
-        self.clear_all_btn.setEnabled(False)
-        image_dict = {}
-        for file_path in file_paths:
-            if file_path.lower().endswith((".png", ".jpg", ".jpeg")):
-                cv_img = cv2.imread(file_path)
-                img_item = ImageItem(cv_img, file_path)
-                image_dict[img_item.id] = img_item
-
-            elif file_path.lower().endswith(".pdf"):
-                with pymupdf.open(file_path) as doc:
-                    for page_num in range(len(doc)):
-                        page = doc.load_page(page_num)
-                        pix = page.get_pixmap(alpha=False)
-                        cv_img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, 3)
-                        cv_img = cv2.cvtColor(cv_img, cv2.COLOR_RGB2BGR)
-                        img_item = ImageItem(cv_img, file_path, page_num)
-                        image_dict[img_item.id] = img_item
-
-        return image_dict
-
-    @Slot(object)
-    def _on_files_loaded(self, image_dict: dict[str, ImageItem]):
-        """Called when file loading completes in background thread."""
-        self.data_store.add_img_items(image_dict)
-        self.choose_files_btn.setEnabled(True)
-        self.clear_all_btn.setEnabled(True)
-        self.statusbar.showMessage(f"{len(image_dict)} images loaded.", 5000)
-
-    @Slot(tuple)
-    def _on_load_error(self, error_info):
-        """Called when file loading fails."""
-        exctype, value, traceback_str = error_info
-        self.statusbar.showMessage(f"Error loading files: {value}", 5000)
-        print(f"Error loading files:\n{traceback_str}")
 
 

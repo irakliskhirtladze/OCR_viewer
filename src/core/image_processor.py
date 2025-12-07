@@ -69,6 +69,8 @@ def crop(image: np.ndarray, x1: int, y1: int, x2: int, y2: int):
 
 def to_gray(image: np.ndarray) -> np.ndarray:
     """Converts the image to grayscale"""
+    if len(image.shape) == 2 or image.shape[2] == 1:
+        return image
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 

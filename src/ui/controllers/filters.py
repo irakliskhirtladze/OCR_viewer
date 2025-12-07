@@ -1,9 +1,11 @@
 import numpy as np
-from PySide6.QtCore import Signal, QObject, Slot
+from PySide6.QtCore import Signal, QObject, Slot, Qt
 from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtWidgets import QMessageBox, QProgressDialog
 
 from ui.generated.ui_mainwindow import Ui_MainWindow
 from models.data_store import DataStore, ImageItem
+from ui.workers.image_processor_worker import ImageProcessorThread
 from utils.image_converter import qimage_to_cv, cv_to_qimage
 from core import image_processor
 
@@ -31,9 +33,10 @@ class FilterManager(QObject):
         self.ui.apply_to_all_btn.clicked.connect(self.apply_to_all_images)
         self.ui.reset_all_btn.clicked.connect(self.reset_filters)
 
-    # ===================
-    # slots
-    # ===================
+        # Instantiate thread and progress bar
+        self._image_processor: ImageProcessorThread | None = None
+        self._progress_dialog: QProgressDialog | None = None
+
     @Slot()
     def apply_filters(self):
         """
@@ -56,27 +59,77 @@ class FilterManager(QObject):
         self.ui.edited_img_viewer.image_viewer.load_pixmap(pixmap)
 
     @Slot()
-    def apply_to_all_images(self):
-        """Apply active filters to all original images in list"""
-        img_items = self.data_store.get_img_items()
-        edited_img_items = {}
-        for img_item in img_items.values():
-            img_item_id = img_item.id
-            original_img_item = self.data_store.get_img_items().get(img_item_id)
-            cv_img = original_img_item.image
+    def reset_filters(self):
+        reply = QMessageBox.question(
+            self.ui.centralwidget,
+            "Reset all filters",
+            "Are you sure you want to reset all filters for all images?",
+        )
+        if reply == QMessageBox.Yes:
             for filt in self.filters:
-                cv_img = filt.apply_filter(cv_img)
-            edited_img_item = ImageItem(cv_img, img_item.path, img_item.page)
-            edited_img_items[edited_img_item.id] = edited_img_item
+                filt.reset()
 
-        self.data_store.add_edited_images(edited_img_items)
+            self.data_store.clear_edited_images()
+            self.ui.statusbar.showMessage("All filters reset successfully", 5000)
+
+    # ===================
+    # apply filters to all images in a separate thread
+    # ===================
+    @Slot()
+    def apply_to_all_images(self):
+        # Initiate progress dialog
+        self._progress_dialog = QProgressDialog("Processing images...", "Cancel", 0, 0, self.ui.centralwidget)
+        self._progress_dialog.setWindowTitle("Loading")
+        self._progress_dialog.setWindowModality(Qt.WindowModal)
+        self._progress_dialog.setMinimumDuration(0)
+        self._progress_dialog.canceled.connect(self._on_processing_cancelled)
+
+        # Create and start worker thread
+        self._image_processor = ImageProcessorThread(self.data_store.get_img_items(), self.filters, self)
+        self._image_processor.progress.connect(self._on_processing_progress)
+        self._image_processor.finished_processing.connect(self._on_images_processed)
+        self._image_processor.error.connect(self._on_load_error)
+        self._image_processor.start()
+
+    @Slot(int, int, str)
+    def _on_processing_progress(self, current: int, total: int, filename: str):
+        """Update progress dialog from worker thread signal."""
+        if self._progress_dialog is not None:
+            self._progress_dialog.setMaximum(total)
+            self._progress_dialog.setValue(current)
+            self._progress_dialog.setLabelText(f"Processing images {filename}...")
 
     @Slot()
-    def reset_filters(self):
-        for filt in self.filters:
-            filt.reset()
+    def _on_processing_cancelled(self):
+        """Handle user cancelling the processing operation."""
+        if self._image_processor:
+            self._image_processor.cancel()
+            self._image_processor.wait()  # Wait for thread to finish
+        self._cleanup_processing()
+        self.ui.statusbar.showMessage("Image processing cancelled.", 5000)
 
-        self.data_store.clear_edited_images()
+    @Slot(dict)
+    def _on_images_processed(self, image_dict: dict[str, ImageItem]):
+        """Called when file processing completes."""
+        self._cleanup_processing()
+        if image_dict:
+            self.data_store.add_edited_images(image_dict)
+            self.ui.statusbar.showMessage(f"{len(image_dict)} images loaded.", 5000)
+        else:
+            self.ui.statusbar.showMessage("No images loaded.", 5000)
+
+    @Slot(str)
+    def _on_load_error(self, error_msg: str):
+        """Called when file loading fails."""
+        self._cleanup_processing()
+        self.ui.statusbar.showMessage(f"Error: {error_msg}", 5000)
+
+    def _cleanup_processing(self):
+        """Clean up after processing completes or is cancelled."""
+        if self._progress_dialog:
+            self._progress_dialog.close()
+            self._progress_dialog = None
+        self._image_processor = None
 
 
 class BaseFilter(QObject):
