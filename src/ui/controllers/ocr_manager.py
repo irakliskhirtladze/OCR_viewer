@@ -1,10 +1,12 @@
 from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QMessageBox, QProgressDialog
 
-from core.ocr_engine import tesseract_word_data
 from models.data_store import DataStore, OCRItem
 from ui.generated.ui_mainwindow import Ui_MainWindow
+from ui.workers.ocr_worker import OCRThread
 from utils.image_converter import cv_to_qimage, qimage_to_cv
 from utils.text_formatter import reconstruct_text
+from core.ocr_engine import TesseractEngine, EasyOCREngine
 
 
 class OCRManager(object):
@@ -18,11 +20,21 @@ class OCRManager(object):
         self.tesseract_langs = {"English": "eng", "Georgian": "kat"}
         self.add_langs_to_combo()
 
+        # OCR engine registry
+        self.ocr_registry = {
+            TesseractEngine.name: TesseractEngine,
+            EasyOCREngine.name: EasyOCREngine,
+        }
+
         # Signal-slot bindings
         self.ui.ocr_engine_combo.currentTextChanged.connect(self.on_ocr_engine_changed)
         self.ui.run_ocr_btn.clicked.connect(self.on_run_ocr_btn_clicked)
         self.ui.show_bboxes_btn.clicked.connect(self.on_show_bboxes_clicked)
         self.data_store.ocrResultsChanged.connect(self.on_ocr_results_changed)
+
+        # Init progress bar and worker with none
+        self._progress_dialog: QProgressDialog | None = None
+        self._ocr_thread: OCRThread | None = None
 
     # ===============================
     # Slots
@@ -30,14 +42,6 @@ class OCRManager(object):
     @Slot()
     def on_ocr_engine_changed(self):
         self.add_langs_to_combo()
-
-    @Slot()
-    def on_run_ocr_btn_clicked(self):
-        ocr_engine = self.ui.ocr_engine_combo.currentText()
-        if ocr_engine.lower() == "tesseract":
-            self.run_tesseract()
-        elif ocr_engine.lower() == "easyocr":
-            self.run_easyocr()
 
     @Slot()
     def on_show_bboxes_clicked(self):
@@ -51,7 +55,7 @@ class OCRManager(object):
             self.ui.statusbar.showMessage("No image has been processed for OCR", 5000)
             return
 
-        text = reconstruct_text(ocr_item_for_current_img.word_data)
+        text = "Sample text"
         self.ui.text_edit.clear()
         self.ui.text_edit.setText(text)
 
@@ -66,18 +70,14 @@ class OCRManager(object):
             self.ui.lang_combo.clear()
             self.ui.lang_combo.addItems(self.easyocr_langs.keys())
 
-    def run_tesseract(self):
-        """Run ocr using tesseract on edited images from the store"""
-        edited_img_items = self.data_store.get_edited_images()
-        ocr_items = {}
-        for img_item in edited_img_items.values():
-            selected_lang = self.ui.lang_combo.currentText()
-            word_data = tesseract_word_data(img_item.image, lang=self.tesseract_langs[selected_lang])
-            ocr_item = OCRItem(img_item.id, word_data)
-            ocr_items[img_item.id] = ocr_item
+    # ===============================
+    # Run tesseract ocr in separate thread
+    # ===============================
+    @Slot()
+    def on_run_ocr_btn_clicked(self):
+        chosen_engine = self.ui.ocr_engine_combo.currentText()
+        chosen_lang = self.ui.lang_combo.currentText()
+        edited_img_items = self.data_store.get_ocr_items()
 
-        self.data_store.set_ocr_items(ocr_items)
-
-    def run_easyocr(self):
-        pass
-
+        # progress dialog
+        self._progress_dialog = QProgressDialog("Recognizing text...", "Cancel", 0, 0, self.ui.centralwidget)

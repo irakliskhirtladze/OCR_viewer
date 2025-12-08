@@ -39,13 +39,22 @@ class ImageItem:
 
 
 @dataclass
+class TextRegion:
+    """Normalized OCR result for a single text region (word/line)"""
+    text: str
+    confidence: float  # 0.0 - 1.0 (normalized)
+    bbox: tuple[int, int, int, int]  # (x, y, width, height)
+    level: str = "word"  # "word", "line", "block"
+
+
+@dataclass
 class OCRItem:
     """OCR result for a single image"""
     image_id: str
-    word_data: list[dict]
-    text: str = ""
+    regions: list[TextRegion]
+    full_text: str = ""
     engine: str = ""
-    languages: tuple[str] = ()
+    language: str = ""
 
 
 class DataStore(QObject):

@@ -4,29 +4,59 @@ import pandas as pd
 from PIL import Image
 from pytesseract import pytesseract, Output
 import easyocr
+from abc import ABC, abstractmethod
+
+from models.data_store import TextRegion
 
 
-def tesseract_word_data(img: np.ndarray, lang: str = "eng", conf_threshold: int = 10) -> list[dict]:
-    """Takes OpenCV image and extracts OCR test_data from it using tesseract."""
-    data = pytesseract.image_to_data(img, lang=lang, config="--psm 3", output_type=Output.DATAFRAME)
-    words = data[(data.level == 5) & (data.conf >= conf_threshold)]
-    words = words[['text', 'conf', 'left', 'top', 'width', 'height']]
-    words = words[words.text.str.strip().astype(bool)]
-    words = words.reset_index(drop=True)
+class OCREngineBase(ABC):
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        pass
 
-    return words.to_dict(orient="records")
-
-
-def tesseract_text(img: np.ndarray, lang: str = "eng") -> str | None:
-    """Extracts OCR text from OpenCV image."""
-    text = pytesseract.image_to_string(img, lang=lang)
-    return text
+    @abstractmethod
+    def recognize(self, image: np.ndarray, lang: str) -> list[TextRegion]:
+        """Returns normalized TextRegion list"""
+        pass
 
 
-def ocr_easyocr(img: np.ndarray, lang: str = "en") -> list:
-    """Takes OpenCV image and extracts OCR test_data from it using easyocr."""
-    reader = easyocr.Reader([lang])
-    return reader.readtext(img, detail=0, paragraph=True)
+class TesseractEngine(OCREngineBase):
+    name = "tesseract"
 
+    def recognize(self, image: np.ndarray, lang: str = "eng") -> list[TextRegion]:
+        data = pytesseract.image_to_data(image, lang=lang, output_type=Output.DICT)
+        regions = []
+        for i in range(len(data['text'])):
+            if data['conf'][i] > 0 and data['text'][i].strip():
+                regions.append(TextRegion(
+                    text=data['text'][i],
+                    confidence=data['conf'][i] / 100.0,  # Normalize to 0-1
+                    bbox=(data['left'][i], data['top'][i],
+                          data['width'][i], data['height'][i]),
+                    level="word"
+                ))
+        return regions
+
+
+class EasyOCREngine(OCREngineBase):
+    name = "easyocr"
+
+    def recognize(self, image: np.ndarray, lang: str = "en") -> list[TextRegion]:
+        reader = easyocr.Reader([lang])
+        results = reader.readtext(image)  # Returns [polygon, text, conf]
+        regions = []
+        for polygon, text, conf in results:
+            # Convert 4-point polygon to bbox
+            xs = [p[0] for p in polygon]
+            ys = [p[1] for p in polygon]
+            bbox = (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
+            regions.append(TextRegion(
+                text=text,
+                confidence=conf,
+                bbox=bbox,
+                level="line"  # EasyOCR returns lines, not words
+            ))
+        return regions
 
 

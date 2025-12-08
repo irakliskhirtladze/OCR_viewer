@@ -134,10 +134,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def on_edited_images_changed(self, img_items: dict[str, ImageItem]):
         """Handle edited images applied - rebuild thumbnails with edited versions."""
         if not img_items:
-            # Edited images cleared, originals will be shown via originalImagesChanged
             return
 
         self._rebuild_thumbnails(img_items)
+        self.run_ocr_btn.setEnabled(True)
 
         # Set current image from edited set
         current = self.data_store.get_current_img_item()
