@@ -79,7 +79,7 @@ class FilterManager(QObject):
     def apply_to_all_images(self):
         # Initiate progress dialog
         self._progress_dialog = QProgressDialog("Processing images...", "Cancel", 0, 0, self.ui.centralwidget)
-        self._progress_dialog.setWindowTitle("Loading")
+        self._progress_dialog.setWindowTitle("Processing")
         self._progress_dialog.setWindowModality(Qt.WindowModal)
         self._progress_dialog.setMinimumDuration(0)
         self._progress_dialog.canceled.connect(self._on_processing_cancelled)

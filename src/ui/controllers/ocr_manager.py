@@ -1,4 +1,4 @@
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, Qt, QObject
 from PySide6.QtWidgets import QMessageBox, QProgressDialog
 
 from models.data_store import DataStore, OCRItem
@@ -9,7 +9,7 @@ from utils.text_formatter import reconstruct_text
 from core.ocr_engine import TesseractEngine, EasyOCREngine
 
 
-class OCRManager(object):
+class OCRManager(QObject):
     def __init__(self, ui: Ui_MainWindow, data_store: DataStore):
         super().__init__()
         self.ui = ui
@@ -77,7 +77,34 @@ class OCRManager(object):
     def on_run_ocr_btn_clicked(self):
         chosen_engine = self.ui.ocr_engine_combo.currentText()
         chosen_lang = self.ui.lang_combo.currentText()
-        edited_img_items = self.data_store.get_ocr_items()
+        edited_img_items = self.data_store.get_img_items()
 
-        # progress dialog
+        # Progress dialog
         self._progress_dialog = QProgressDialog("Recognizing text...", "Cancel", 0, 0, self.ui.centralwidget)
+        self._progress_dialog.setWindowTitle("OCR")
+        self._progress_dialog.setWindowModality(Qt.WindowModal)
+        self._progress_dialog.setMinimumDuration(0)
+        self._progress_dialog.canceled.connect(self._on_ocr_cancelled)
+
+        # Worker thread for the OCR batch processing
+        self._ocr_thread = OCRThread(edited_img_items, chosen_engine, self.ocr_registry, chosen_lang, self)
+        self._ocr_thread.progress.connect(self._on_ocr_progress)
+        self._ocr_thread.ocr_finished.connect(self._on_ocr_finished)
+        self._ocr_thread.error.connect(self._on_ocr_error)
+        self._ocr_thread.start()
+
+    @Slot()
+    def _on_ocr_cancelled(self):
+        pass
+
+    @Slot()
+    def _on_ocr_progress(self):
+        pass
+
+    @Slot()
+    def _on_ocr_finished(self):
+        pass
+
+    @Slot()
+    def _on_ocr_error(self):
+        pass
