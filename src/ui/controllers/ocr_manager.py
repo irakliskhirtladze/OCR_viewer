@@ -95,16 +95,32 @@ class OCRManager(QObject):
 
     @Slot()
     def _on_ocr_cancelled(self):
-        pass
+        if self._ocr_thread:
+            self._ocr_thread.cancel()
+            self._ocr_thread.wait()
+        self._cleanup_thread()
+        self.ui.statusbar.showMessage("OCR cancelled.", 5000)
 
-    @Slot()
-    def _on_ocr_progress(self):
-        pass
+    @Slot(int, int, str)
+    def _on_ocr_progress(self, current: int, total: int, filename: str):
+        if self._progress_dialog is not None:
+            self._progress_dialog.setMaximum(total)
+            self._progress_dialog.setValue(current)
+            self._progress_dialog.setLabelText(f"Extracting text from {filename}")
 
-    @Slot()
-    def _on_ocr_finished(self):
-        pass
+    @Slot(dict)
+    def _on_ocr_finished(self, ocr_items: dict[str, OCRItem]):
+        self._cleanup_thread()
+        if ocr_items:
+            self.data_store.set_ocr_items(ocr_items)
+            self.ui.statusbar.showMessage("OCR finished.", 5000)
+        else:
+            self.ui.statusbar.showMessage("No OCR items added.", 5000)
 
     @Slot()
     def _on_ocr_error(self):
+        self._cleanup_thread()
+        self.ui.statusbar.showMessage(f"OCR error: {}", 5000)
+
+    def _cleanup_thread(self):
         pass
