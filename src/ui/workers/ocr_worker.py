@@ -32,7 +32,7 @@ class OCRThread(QThread):
 
         try:
             for img_id, edited_img_item in self.edited_img_items.items():
-                self.progress.emit(current_item, edited_img_item, img_id)
+                self.progress.emit(current_item, total_items, img_id)
                 regions = ocr_engine.recognize(edited_img_item.image, lang=self.lang)
                 ocr_item = OCRItem(img_id, regions, engine=self.ocr_engine, language=self.lang)
                 ocr_items[img_id] = ocr_item

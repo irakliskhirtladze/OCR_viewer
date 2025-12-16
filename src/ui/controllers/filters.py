@@ -88,6 +88,7 @@ class FilterManager(QObject):
         self._image_processor = ImageProcessorThread(self.data_store.get_img_items(), self.filters, self)
         self._image_processor.progress.connect(self._on_processing_progress)
         self._image_processor.finished_processing.connect(self._on_images_processed)
+        self._image_processor.finished.connect(self._on_thread_finished)
         self._image_processor.error.connect(self._on_load_error)
         self._image_processor.start()
 
@@ -111,17 +112,20 @@ class FilterManager(QObject):
     @Slot(dict)
     def _on_images_processed(self, image_dict: dict[str, ImageItem]):
         """Called when file processing completes."""
-        self._cleanup_processing()
         if image_dict:
             self.data_store.add_edited_images(image_dict)
             self.ui.statusbar.showMessage(f"{len(image_dict)} images loaded.", 5000)
         else:
             self.ui.statusbar.showMessage("No images loaded.", 5000)
 
+    @Slot()
+    def _on_thread_finished(self):
+        """Called when thread fully completes - safe to cleanup."""
+        self._cleanup_processing()
+
     @Slot(str)
     def _on_load_error(self, error_msg: str):
         """Called when file loading fails."""
-        self._cleanup_processing()
         self.ui.statusbar.showMessage(f"Error: {error_msg}", 5000)
 
     def _cleanup_processing(self):
