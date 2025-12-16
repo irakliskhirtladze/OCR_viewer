@@ -69,7 +69,7 @@ class OCRManager(QObject):
             self.ui.lang_combo.addItems(self.ocr_registry["easyocr"].langs.keys())
 
     # ===============================
-    # Run tesseract ocr in separate thread
+    # Run ocr in separate thread
     # ===============================
     @Slot()
     def on_run_ocr_btn_clicked(self):
@@ -91,6 +91,7 @@ class OCRManager(QObject):
         self._ocr_thread = OCRThread(edited_img_items, chosen_engine, self.ocr_registry, lang, self)
         self._ocr_thread.progress.connect(self._on_ocr_progress)
         self._ocr_thread.ocr_finished.connect(self._on_ocr_finished)
+        self._ocr_thread.finished.connect(self._on_thread_finished)
         self._ocr_thread.error.connect(self._on_ocr_error)
         self._ocr_thread.start()
 
@@ -113,6 +114,7 @@ class OCRManager(QObject):
     def _on_ocr_finished(self, ocr_items: dict[str, OCRItem]):
         if ocr_items:
             self.data_store.set_ocr_items(ocr_items)
+            print(self.data_store.get_ocr_items())
             self.ui.statusbar.showMessage("OCR finished.", 5000)
         else:
             self.ui.statusbar.showMessage("No OCR items added.", 5000)
@@ -127,6 +129,7 @@ class OCRManager(QObject):
 
     def _cleanup_thread(self):
         if self._progress_dialog:
+            self._progress_dialog.canceled.disconnect(self._on_ocr_cancelled)
             self._progress_dialog.close()
             self._progress_dialog = None
         self._ocr_thread = None

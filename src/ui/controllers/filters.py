@@ -131,6 +131,7 @@ class FilterManager(QObject):
     def _cleanup_processing(self):
         """Clean up after processing completes or is cancelled."""
         if self._progress_dialog:
+            self._progress_dialog.canceled.disconnect(self._on_processing_cancelled)
             self._progress_dialog.close()
             self._progress_dialog = None
         self._image_processor = None
