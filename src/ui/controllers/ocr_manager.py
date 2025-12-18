@@ -27,7 +27,6 @@ class OCRManager(QObject):
         # Signal-slot bindings
         self.ui.ocr_engine_combo.currentTextChanged.connect(self.on_ocr_engine_changed)
         self.ui.run_ocr_btn.clicked.connect(self.on_run_ocr_btn_clicked)
-        self.ui.bboxes_chbox.toggled.connect(self.on_show_bboxes_clicked)
         self.data_store.ocrResultsChanged.connect(self.on_ocr_results_changed)
 
         # Progress runner for OCR processing
@@ -39,10 +38,6 @@ class OCRManager(QObject):
     @Slot()
     def on_ocr_engine_changed(self):
         self.add_langs_to_combo()
-
-    @Slot()
-    def on_show_bboxes_clicked(self):
-        pass
 
     @Slot()
     def on_ocr_results_changed(self):
