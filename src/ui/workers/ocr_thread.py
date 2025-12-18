@@ -38,13 +38,13 @@ class OCRThread(QThread):
                 ocr_items[img_id] = ocr_item
                 current_item += 1
 
-                # Emit final progress to show 100% before finishing
-                self.progress.emit(total_items, total_items, "Done")
+            # Emit final progress to show 100% before finishing
+            self.progress.emit(total_items, total_items, "Done")
 
-                # Small delay to let progress signal be processed first
-                self.msleep(10)
+            # Small delay to let progress signal be processed first
+            self.msleep(10)
 
-                self.ocr_finished.emit(ocr_items)
+            self.ocr_finished.emit(ocr_items)
 
         except Exception as e:
             self.error.emit(str(e))
