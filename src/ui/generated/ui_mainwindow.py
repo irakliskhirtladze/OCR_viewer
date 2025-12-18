@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'mainwindow.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.10.1
+## Created by: Qt User Interface Compiler version 6.10.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -28,7 +28,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1088, 800)
+        MainWindow.resize(1088, 792)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
@@ -88,7 +88,7 @@ class Ui_MainWindow(object):
         self.thumb_scroll_area.setWidgetResizable(True)
         self.thumb_scroll_widget = QWidget()
         self.thumb_scroll_widget.setObjectName(u"thumb_scroll_widget")
-        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 437, 134))
+        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 455, 136))
         self.thumb_scroll_area.setWidget(self.thumb_scroll_widget)
 
         self.verticalLayout_2.addWidget(self.thumb_scroll_area)
@@ -114,12 +114,11 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer_3)
 
-        self.show_bboxes_btn = QPushButton(self.frame_7)
-        self.show_bboxes_btn.setObjectName(u"show_bboxes_btn")
-        self.show_bboxes_btn.setEnabled(False)
-        self.show_bboxes_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.bboxes_chbox = QCheckBox(self.frame_7)
+        self.bboxes_chbox.setObjectName(u"bboxes_chbox")
+        self.bboxes_chbox.setEnabled(False)
 
-        self.horizontalLayout_2.addWidget(self.show_bboxes_btn)
+        self.horizontalLayout_2.addWidget(self.bboxes_chbox)
 
 
         self.verticalLayout.addWidget(self.frame_7)
@@ -529,7 +528,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
         self.choose_files_btn.setText(QCoreApplication.translate("MainWindow", u"Choose files", None))
         self.clear_all_btn.setText(QCoreApplication.translate("MainWindow", u"Clear all", None))
-        self.show_bboxes_btn.setText(QCoreApplication.translate("MainWindow", u"Show BBoxes", None))
+        self.bboxes_chbox.setText(QCoreApplication.translate("MainWindow", u"Show bboxes", None))
         self.grey_chbx.setText(QCoreApplication.translate("MainWindow", u"Grayscale", None))
         self.binarize_chbx.setText(QCoreApplication.translate("MainWindow", u"Binarize", None))
         self.binarize_val_lbl.setText(QCoreApplication.translate("MainWindow", u"127", None))

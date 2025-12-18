@@ -1,24 +1,19 @@
-from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QMessageBox, QProgressDialog
+from PySide6.QtCore import Slot, QObject
+from PySide6.QtWidgets import QMessageBox
 
 from models.data_store import DataStore, OCRItem
 from ui.generated.ui_mainwindow import Ui_MainWindow
-from ui.workers.ocr_worker import OCRThread
-from utils.image_converter import cv_to_qimage, qimage_to_cv
+from ui.workers.ocr_thread import OCRThread
+from ui.workers.progress_runner import ProgressRunner
 from utils.text_formatter import reconstruct_text
 from core.ocr_engine import TesseractEngine, EasyOCREngine
 
 
-class OCRManager(object):
+class OCRManager(QObject):
     def __init__(self, ui: Ui_MainWindow, data_store: DataStore):
         super().__init__()
         self.ui = ui
         self.data_store = data_store
-
-        # setup ocr engine and supported language boxes
-        self.easyocr_langs = {'English': 'en', 'French': 'fr', 'German': 'de'}
-        self.tesseract_langs = {"English": "eng", "Georgian": "kat"}
-        self.add_langs_to_combo()
 
         # OCR engine registry
         self.ocr_registry = {
@@ -26,15 +21,17 @@ class OCRManager(object):
             EasyOCREngine.name: EasyOCREngine,
         }
 
+        # setup ocr engine and supported language boxes
+        self.add_langs_to_combo()
+
         # Signal-slot bindings
         self.ui.ocr_engine_combo.currentTextChanged.connect(self.on_ocr_engine_changed)
         self.ui.run_ocr_btn.clicked.connect(self.on_run_ocr_btn_clicked)
-        self.ui.show_bboxes_btn.clicked.connect(self.on_show_bboxes_clicked)
+        self.ui.bboxes_chbox.toggled.connect(self.on_show_bboxes_clicked)
         self.data_store.ocrResultsChanged.connect(self.on_ocr_results_changed)
 
-        # Init progress bar and worker with none
-        self._progress_dialog: QProgressDialog | None = None
-        self._ocr_thread: OCRThread | None = None
+        # Progress runner for OCR processing
+        self._runner = ProgressRunner(self.ui.centralwidget, "OCR", "Recognizing text...")
 
     # ===============================
     # Slots
@@ -65,19 +62,48 @@ class OCRManager(object):
     def add_langs_to_combo(self):
         if self.ui.ocr_engine_combo.currentText() == "Tesseract":
             self.ui.lang_combo.clear()
-            self.ui.lang_combo.addItems(self.tesseract_langs.keys())
+            self.ui.lang_combo.addItems(self.ocr_registry["tesseract"].langs.keys())
         elif self.ui.ocr_engine_combo.currentText() == "EasyOCR":
             self.ui.lang_combo.clear()
-            self.ui.lang_combo.addItems(self.easyocr_langs.keys())
+            self.ui.lang_combo.addItems(self.ocr_registry["easyocr"].langs.keys())
 
     # ===============================
-    # Run tesseract ocr in separate thread
+    # Run ocr in separate thread
     # ===============================
     @Slot()
     def on_run_ocr_btn_clicked(self):
-        chosen_engine = self.ui.ocr_engine_combo.currentText()
+        chosen_engine = self.ui.ocr_engine_combo.currentText().lower()
         chosen_lang = self.ui.lang_combo.currentText()
-        edited_img_items = self.data_store.get_ocr_items()
+        lang = self.ocr_registry[chosen_engine].langs[chosen_lang]
+        edited_img_items = self.data_store.get_img_items()
 
-        # progress dialog
-        self._progress_dialog = QProgressDialog("Recognizing text...", "Cancel", 0, 0, self.ui.centralwidget)
+        thread = OCRThread(edited_img_items, chosen_engine, self.ocr_registry, lang)
+        thread.ocr_finished.connect(self._on_ocr_finished)
+        thread.error.connect(self._on_ocr_error)
+
+        self._runner.run(
+            thread,
+            on_progress=thread.progress,
+            on_done=self._on_ocr_done
+        )
+
+    @Slot(dict)
+    def _on_ocr_finished(self, ocr_items: dict[str, OCRItem]):
+        if ocr_items:
+            self.data_store.set_ocr_items(ocr_items)
+            self.ui.statusbar.showMessage("OCR finished.", 5000)
+
+            current_img_item = self.data_store.get_current_img_item()
+            if not current_img_item.is_null() and ocr_items.get(current_img_item.id) is not None:
+                self.ui.bboxes_chbox.setEnabled(True)
+        else:
+            self.ui.statusbar.showMessage("No OCR items added.", 5000)
+
+    @Slot(str)
+    def _on_ocr_error(self, error: str):
+        self.ui.statusbar.showMessage(f"OCR error: {error}", 5000)
+
+    def _on_ocr_done(self, cancelled: bool):
+        """Called when OCR completes, errors, or is cancelled."""
+        if cancelled:
+            self.ui.statusbar.showMessage("OCR cancelled.", 5000)

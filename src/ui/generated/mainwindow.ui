@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1088</width>
-    <height>800</height>
+    <height>792</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -176,8 +176,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>437</width>
-               <height>134</height>
+               <width>455</width>
+               <height>136</height>
               </rect>
              </property>
             </widget>
@@ -231,15 +231,12 @@
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="show_bboxes_btn">
+           <widget class="QCheckBox" name="bboxes_chbox">
             <property name="enabled">
              <bool>false</bool>
             </property>
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
             <property name="text">
-             <string>Show BBoxes</string>
+             <string>Show bboxes</string>
             </property>
            </widget>
           </item>

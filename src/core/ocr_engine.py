@@ -15,6 +15,11 @@ class OCREngineBase(ABC):
     def name(self) -> str:
         pass
 
+    @property
+    @abstractmethod
+    def langs(self) -> dict[str, str]:
+        pass
+
     @abstractmethod
     def recognize(self, image: np.ndarray, lang: str) -> list[TextRegion]:
         """Returns normalized TextRegion list"""
@@ -23,8 +28,9 @@ class OCREngineBase(ABC):
 
 class TesseractEngine(OCREngineBase):
     name = "tesseract"
+    langs = {"English": "eng", "Georgian": "kat"}
 
-    def recognize(self, image: np.ndarray, lang: str = "eng") -> list[TextRegion]:
+    def recognize(self, image: np.ndarray, lang: str) -> list[TextRegion]:
         data = pytesseract.image_to_data(image, lang=lang, output_type=Output.DICT)
         regions = []
         for i in range(len(data['text'])):
@@ -41,8 +47,9 @@ class TesseractEngine(OCREngineBase):
 
 class EasyOCREngine(OCREngineBase):
     name = "easyocr"
+    langs = {'English': 'en', 'French': 'fr', 'German': 'de'}
 
-    def recognize(self, image: np.ndarray, lang: str = "en") -> list[TextRegion]:
+    def recognize(self, image: np.ndarray, lang: str) -> list[TextRegion]:
         reader = easyocr.Reader([lang])
         results = reader.readtext(image)  # Returns [polygon, text, conf]
         regions = []

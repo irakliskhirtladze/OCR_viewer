@@ -1,12 +1,13 @@
 import numpy as np
-from PySide6.QtCore import Signal, QObject, Slot, Qt
-from PySide6.QtGui import QImage, QPixmap
-from PySide6.QtWidgets import QMessageBox, QProgressDialog
+from PySide6.QtCore import Signal, QObject, Slot
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QMessageBox
 
 from ui.generated.ui_mainwindow import Ui_MainWindow
 from models.data_store import DataStore, ImageItem
-from ui.workers.image_processor_worker import ImageProcessorThread
-from utils.image_converter import qimage_to_cv, cv_to_qimage
+from ui.workers.image_processor_thread import ImageProcessorThread
+from ui.workers.progress_runner import ProgressRunner
+from utils.image_converter import cv_to_qimage
 from core import image_processor
 
 
@@ -33,9 +34,8 @@ class FilterManager(QObject):
         self.ui.apply_to_all_btn.clicked.connect(self.apply_to_all_images)
         self.ui.reset_all_btn.clicked.connect(self.reset_filters)
 
-        # Instantiate thread and progress bar
-        self._image_processor: ImageProcessorThread | None = None
-        self._progress_dialog: QProgressDialog | None = None
+        # Progress runner for batch processing
+        self._runner = ProgressRunner(self.ui.centralwidget, "Processing", "Applying filters...")
 
     @Slot()
     def apply_filters(self):
@@ -77,59 +77,34 @@ class FilterManager(QObject):
     # ===================
     @Slot()
     def apply_to_all_images(self):
-        # Initiate progress dialog
-        self._progress_dialog = QProgressDialog("Processing images...", "Cancel", 0, 0, self.ui.centralwidget)
-        self._progress_dialog.setWindowTitle("Loading")
-        self._progress_dialog.setWindowModality(Qt.WindowModal)
-        self._progress_dialog.setMinimumDuration(0)
-        self._progress_dialog.canceled.connect(self._on_processing_cancelled)
+        thread = ImageProcessorThread(self.data_store.get_img_items(), self.filters)
+        thread.finished_processing.connect(self._on_images_processed)
+        thread.error.connect(self._on_processing_error)
 
-        # Create and start worker thread
-        self._image_processor = ImageProcessorThread(self.data_store.get_img_items(), self.filters, self)
-        self._image_processor.progress.connect(self._on_processing_progress)
-        self._image_processor.finished_processing.connect(self._on_images_processed)
-        self._image_processor.error.connect(self._on_load_error)
-        self._image_processor.start()
-
-    @Slot(int, int, str)
-    def _on_processing_progress(self, current: int, total: int, filename: str):
-        """Update progress dialog from worker thread signal."""
-        if self._progress_dialog is not None:
-            self._progress_dialog.setMaximum(total)
-            self._progress_dialog.setValue(current)
-            self._progress_dialog.setLabelText(f"Processing images {filename}...")
-
-    @Slot()
-    def _on_processing_cancelled(self):
-        """Handle user cancelling the processing operation."""
-        if self._image_processor:
-            self._image_processor.cancel()
-            self._image_processor.wait()  # Wait for thread to finish
-        self._cleanup_processing()
-        self.ui.statusbar.showMessage("Image processing cancelled.", 5000)
+        self._runner.run(
+            thread,
+            on_progress=thread.progress,
+            on_done=self._on_processing_done
+        )
 
     @Slot(dict)
     def _on_images_processed(self, image_dict: dict[str, ImageItem]):
         """Called when file processing completes."""
-        self._cleanup_processing()
         if image_dict:
             self.data_store.add_edited_images(image_dict)
-            self.ui.statusbar.showMessage(f"{len(image_dict)} images loaded.", 5000)
+            self.ui.statusbar.showMessage(f"{len(image_dict)} images processed.", 5000)
         else:
-            self.ui.statusbar.showMessage("No images loaded.", 5000)
+            self.ui.statusbar.showMessage("No images processed.", 5000)
 
     @Slot(str)
-    def _on_load_error(self, error_msg: str):
-        """Called when file loading fails."""
-        self._cleanup_processing()
+    def _on_processing_error(self, error_msg: str):
+        """Called when processing fails."""
         self.ui.statusbar.showMessage(f"Error: {error_msg}", 5000)
 
-    def _cleanup_processing(self):
-        """Clean up after processing completes or is cancelled."""
-        if self._progress_dialog:
-            self._progress_dialog.close()
-            self._progress_dialog = None
-        self._image_processor = None
+    def _on_processing_done(self, cancelled: bool):
+        """Called when processing completes, errors, or is cancelled."""
+        if cancelled:
+            self.ui.statusbar.showMessage("Processing cancelled.", 5000)
 
 
 class BaseFilter(QObject):
