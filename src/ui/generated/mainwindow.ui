@@ -176,8 +176,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>455</width>
-               <height>136</height>
+               <width>436</width>
+               <height>134</height>
               </rect>
              </property>
             </widget>
@@ -744,6 +744,11 @@
                   <item>
                    <property name="text">
                     <string>Tesseract</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>PaddleOCR</string>
                    </property>
                   </item>
                   <item>

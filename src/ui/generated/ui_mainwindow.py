@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'mainwindow.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.10.0
+## Created by: Qt User Interface Compiler version 6.10.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -88,7 +88,7 @@ class Ui_MainWindow(object):
         self.thumb_scroll_area.setWidgetResizable(True)
         self.thumb_scroll_widget = QWidget()
         self.thumb_scroll_widget.setObjectName(u"thumb_scroll_widget")
-        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 455, 136))
+        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 436, 134))
         self.thumb_scroll_area.setWidget(self.thumb_scroll_widget)
 
         self.verticalLayout_2.addWidget(self.thumb_scroll_area)
@@ -437,6 +437,7 @@ class Ui_MainWindow(object):
         self.ocr_engine_combo = QComboBox(self.frame_11)
         self.ocr_engine_combo.addItem("")
         self.ocr_engine_combo.addItem("")
+        self.ocr_engine_combo.addItem("")
         self.ocr_engine_combo.setObjectName(u"ocr_engine_combo")
 
         self.verticalLayout_13.addWidget(self.ocr_engine_combo)
@@ -544,7 +545,8 @@ class Ui_MainWindow(object):
         self.reset_all_btn.setText(QCoreApplication.translate("MainWindow", u"Reset filters for all", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"Choose OCR engine", None))
         self.ocr_engine_combo.setItemText(0, QCoreApplication.translate("MainWindow", u"Tesseract", None))
-        self.ocr_engine_combo.setItemText(1, QCoreApplication.translate("MainWindow", u"EasyOCR", None))
+        self.ocr_engine_combo.setItemText(1, QCoreApplication.translate("MainWindow", u"PaddleOCR", None))
+        self.ocr_engine_combo.setItemText(2, QCoreApplication.translate("MainWindow", u"EasyOCR", None))
 
         self.label_6.setText(QCoreApplication.translate("MainWindow", u"Language", None))
         self.run_ocr_btn.setText(QCoreApplication.translate("MainWindow", u"Run OCR", None))

@@ -6,7 +6,7 @@ from ui.generated.ui_mainwindow import Ui_MainWindow
 from ui.workers.ocr_thread import OCRThread
 from ui.workers.progress_runner import ProgressRunner
 from utils.text_formatter import reconstruct_text
-from core.ocr_engine import TesseractEngine, EasyOCREngine
+from core.ocr_engine import TesseractEngine, EasyOCREngine, PaddleOCREngine
 
 
 class OCRManager(QObject):
@@ -19,6 +19,7 @@ class OCRManager(QObject):
         self.ocr_registry = {
             TesseractEngine.name: TesseractEngine,
             EasyOCREngine.name: EasyOCREngine,
+            PaddleOCREngine.name: PaddleOCREngine,
         }
 
         # setup ocr engine and supported language boxes
@@ -60,6 +61,9 @@ class OCRManager(QObject):
         if self.ui.ocr_engine_combo.currentText() == "Tesseract":
             self.ui.lang_combo.clear()
             self.ui.lang_combo.addItems(self.ocr_registry["tesseract"].langs.keys())
+        elif self.ui.ocr_engine_combo.currentText() == "PaddleOCR":
+            self.ui.lang_combo.clear()
+            self.ui.lang_combo.addItems(self.ocr_registry["paddleocr"].langs.keys())
         elif self.ui.ocr_engine_combo.currentText() == "EasyOCR":
             self.ui.lang_combo.clear()
             self.ui.lang_combo.addItems(self.ocr_registry["easyocr"].langs.keys())
