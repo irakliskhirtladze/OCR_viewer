@@ -56,6 +56,10 @@ class OCRItem:
     engine: str = ""
     language: str = ""
 
+    def is_null(self) -> bool:
+        """return true if ocr item regions list is empty"""
+        return not self.regions
+
 
 class DataStore(QObject):
     """Central data store for the application"""

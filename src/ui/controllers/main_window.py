@@ -189,6 +189,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if current_ocr_item is not None:
                 self.edited_img_viewer.bbox_overlay.set_regions(current_ocr_item)
         else:
+            self.edited_img_viewer.bbox_overlay.clear_regions()
 
 
 

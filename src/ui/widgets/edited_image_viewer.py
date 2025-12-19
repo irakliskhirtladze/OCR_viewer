@@ -100,7 +100,7 @@ class BoundingBoxOverlay(QWidget):
             painter.drawRect(rect)
 
             # Draw confidence label
-            conf_text = f"{confidence:.0f}%"
+            conf_text = f"{confidence:.2f}"
             text_rect = painter.fontMetrics().boundingRect(conf_text)
 
             # Position label above box (or inside if too close to top)
