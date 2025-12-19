@@ -2,6 +2,7 @@ from PySide6.QtCore import Qt, QRect, QEvent
 from PySide6.QtGui import QPainter, QPen, QColor, QFont
 from PySide6.QtWidgets import QWidget, QFrame, QHBoxLayout
 
+from models.data_store import OCRItem
 from ui.widgets.common.image_viewer import ImageViewer
 
 
@@ -40,22 +41,22 @@ class BoundingBoxOverlay(QWidget):
     def __init__(self, image_viewer: ImageViewer, parent=None):
         super().__init__(parent)
         self.image_viewer = image_viewer
-        self.boxes = []
+        self.regions = []
 
         self.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.setAttribute(Qt.WA_NoSystemBackground)
         self.setStyleSheet("background: transparent;")
 
-    def set_boxes(self, boxes: list):
-        self.boxes = boxes
+    def set_regions(self, ocr_item: OCRItem):
+        self.regions = ocr_item.regions  # list[TextRegion] for current ocr item
         self.update()
 
-    def clear_boxes(self):
-        self.boxes = []
+    def clear_regions(self):
+        self.regions = []
         self.update()
 
     def paintEvent(self, event):
-        if not self.boxes or not self.image_viewer.pixmap or not self.image_viewer.original_pixmap:
+        if not self.regions or not self.image_viewer.pixmap or not self.image_viewer.original_pixmap:
             return
 
         painter = QPainter(self)
@@ -76,13 +77,13 @@ class BoundingBoxOverlay(QWidget):
         font = QFont("Arial", 10, QFont.Bold)
         painter.setFont(font)
 
-        for box in self.boxes:
+        for region in self.regions:
             # Get original coordinates
-            left = box['left']
-            top = box['top']
-            width = box['width']
-            height = box['height']
-            confidence = box['conf']
+            left = region.bbox[0]
+            top = region.bbox[1]
+            width = region.bbox[2]
+            height = region.bbox[3]
+            confidence = region.confidence
 
             # Scale to displayed size
             scaled_left = int(left * scale_x)
@@ -99,7 +100,7 @@ class BoundingBoxOverlay(QWidget):
             painter.drawRect(rect)
 
             # Draw confidence label
-            conf_text = f"{confidence:.0f}%"
+            conf_text = f"{confidence:.2f}"
             text_rect = painter.fontMetrics().boundingRect(conf_text)
 
             # Position label above box (or inside if too close to top)

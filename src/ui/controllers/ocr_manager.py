@@ -27,7 +27,6 @@ class OCRManager(QObject):
         # Signal-slot bindings
         self.ui.ocr_engine_combo.currentTextChanged.connect(self.on_ocr_engine_changed)
         self.ui.run_ocr_btn.clicked.connect(self.on_run_ocr_btn_clicked)
-        self.ui.bboxes_chbox.toggled.connect(self.on_show_bboxes_clicked)
         self.data_store.ocrResultsChanged.connect(self.on_ocr_results_changed)
 
         # Progress runner for OCR processing
@@ -41,16 +40,14 @@ class OCRManager(QObject):
         self.add_langs_to_combo()
 
     @Slot()
-    def on_show_bboxes_clicked(self):
-        pass
-
-    @Slot()
     def on_ocr_results_changed(self):
         current_img_item = self.data_store.get_current_img_item()
         ocr_item_for_current_img = self.data_store.get_ocr_items().get(current_img_item.id)
         if ocr_item_for_current_img is None:
             self.ui.statusbar.showMessage("No image has been processed for OCR", 5000)
             return
+
+        self.ui.edited_img_viewer.bbox_overlay.set_regions(ocr_item_for_current_img)
 
         text = "Sample text"
         self.ui.text_edit.clear()
@@ -75,7 +72,7 @@ class OCRManager(QObject):
         chosen_engine = self.ui.ocr_engine_combo.currentText().lower()
         chosen_lang = self.ui.lang_combo.currentText()
         lang = self.ocr_registry[chosen_engine].langs[chosen_lang]
-        edited_img_items = self.data_store.get_img_items()
+        edited_img_items = self.data_store.get_edited_images()
 
         thread = OCRThread(edited_img_items, chosen_engine, self.ocr_registry, lang)
         thread.ocr_finished.connect(self._on_ocr_finished)
@@ -94,7 +91,7 @@ class OCRManager(QObject):
             self.ui.statusbar.showMessage("OCR finished.", 5000)
 
             current_img_item = self.data_store.get_current_img_item()
-            if not current_img_item.is_null() and ocr_items.get(current_img_item.id) is not None:
+            if not current_img_item.is_null() and not ocr_items.get(current_img_item.id).is_null():
                 self.ui.bboxes_chbox.setEnabled(True)
         else:
             self.ui.statusbar.showMessage("No OCR items added.", 5000)

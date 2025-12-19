@@ -21,8 +21,8 @@ if __name__ == '__main__':
     img = cv2.imread(image_file)
 
     # # processing
-    grey = to_gray(img)
-    thresh = to_binary(grey, 200, 255)
+    # grey = to_gray(img)
+    thresh = to_binary(img, 200, 255)
     # unbordered = remove_borders(grey)
     #
     # gaussian = gaussian_blur(unbordered, (19, 1))
