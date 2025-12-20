@@ -65,5 +65,3 @@ class EasyOCREngine(OCREngineBase):
                 level="line"  # EasyOCR returns lines, not words
             ))
         return regions
-
-

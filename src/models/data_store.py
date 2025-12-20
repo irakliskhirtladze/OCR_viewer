@@ -55,6 +55,12 @@ class OCRItem:
     full_text: str = ""
     engine: str = ""
     language: str = ""
+    avg_confidence: float = 0.0
+
+    def __post_init__(self):
+        if self.regions and self.avg_confidence == 0.0:
+            confidences = [r.confidence for r in self.regions]
+            self.avg_confidence = sum(confidences) / len(confidences)
 
     def is_null(self) -> bool:
         """return true if ocr item regions list is empty"""

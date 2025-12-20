@@ -47,11 +47,28 @@ class OCRManager(QObject):
             self.ui.statusbar.showMessage("No image has been processed for OCR", 5000)
             return
 
-        self.ui.edited_img_viewer.bbox_overlay.set_regions(ocr_item_for_current_img)
+        self.on_show_bboxes_toggled(self.ui.bboxes_chbox.isChecked())
 
         text = "Sample text"
         self.ui.text_edit.clear()
         self.ui.text_edit.setText(text)
+
+    @Slot(bool)
+    def on_show_bboxes_toggled(self, checked: bool):
+        """If show bboxes is checked, display bounding boxes and conf scores as overlay for the current image."""
+        if checked:
+            ocr_items = self.data_store.get_ocr_items()
+            current_img_item = self.data_store.get_current_img_item()
+            current_ocr_item = ocr_items.get(current_img_item.id)
+            if current_ocr_item is not None:
+                self.ui.edited_img_viewer.bbox_overlay.set_regions(current_ocr_item)
+
+                avg_conf = current_ocr_item.avg_confidence
+                self.ui.avg_conf_lbl.clear()
+                self.ui.avg_conf_lbl.setText(f"Average conf: {avg_conf:.2f}")
+        else:
+            self.ui.edited_img_viewer.bbox_overlay.clear_regions()
+            self.ui.avg_conf_lbl.clear()
 
     # ===============================
     # Other logic
