@@ -4,7 +4,6 @@ import pandas as pd
 from PIL import Image
 from pytesseract import pytesseract, Output
 import easyocr
-from paddleocr import PaddleOCR
 from abc import ABC, abstractmethod
 
 from models.data_store import TextRegion
