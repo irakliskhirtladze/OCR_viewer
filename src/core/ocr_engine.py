@@ -66,38 +66,3 @@ class EasyOCREngine(OCREngineBase):
                 level="line"  # EasyOCR returns lines, not words
             ))
         return regions
-
-
-class PaddleOCREngine(OCREngineBase):
-    name = "paddleocr"
-    langs = {"English": "en", "German": "german"}  # 80+ languages
-
-    def __init__(self):
-        self._ocr = None  # Lazy init (model loading is slow)
-
-    def _get_ocr(self, lang: str):
-        if self._ocr is None or self._current_lang != lang:
-            self._ocr = PaddleOCR(use_angle_cls=True, lang=lang, show_log=False)
-            self._current_lang = lang
-        return self._ocr
-
-    def recognize(self, image: np.ndarray, lang: str = "en") -> list[TextRegion]:
-        ocr = self._get_ocr(lang)
-        results = ocr.ocr(image, cls=True)
-
-        regions = []
-        if results and results[0]:
-            for line in results[0]:
-                polygon, (text, conf) = line
-                # Convert polygon to bbox
-                xs = [p[0] for p in polygon]
-                ys = [p[1] for p in polygon]
-                bbox = (int(min(xs)), int(min(ys)),
-                        int(max(xs) - min(xs)), int(max(ys) - min(ys)))
-                regions.append(TextRegion(
-                    text=text,
-                    confidence=conf,
-                    bbox=bbox,
-                    level="line"
-                ))
-        return regions

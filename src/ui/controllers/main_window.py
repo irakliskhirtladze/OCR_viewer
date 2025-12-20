@@ -34,7 +34,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.data_store.editedImagesChanged.connect(self.on_edited_images_changed)
         self.data_store.currentImageChanged.connect(self.on_current_image_changed)
 
-        self.bboxes_chbox.toggled.connect(self.on_show_bboxes_clicked)
+        self.bboxes_chbox.toggled.connect(self.ocr_manager.on_show_bboxes_toggled)
 
         # Thumbnail scroller
         self.thumb_layout = QHBoxLayout()
@@ -157,7 +157,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.edited_img_viewer.image_viewer.load_pixmap(pixmap)
         if self.data_store.get_ocr_items().get(current_img_item.id) is not None:
             self.bboxes_chbox.setEnabled(True)
-            self.on_show_bboxes_clicked(self.bboxes_chbox.isChecked())
+            self.ocr_manager.on_show_bboxes_toggled(self.bboxes_chbox.isChecked())
         else:
             self.bboxes_chbox.setEnabled(False)
             self.edited_img_viewer.bbox_overlay.clear_regions()
@@ -179,17 +179,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def image_label_clicked(self, img_item: ImageItem):
         self.data_store.set_current_img_item(img_item)
 
-    @Slot(bool)
-    def on_show_bboxes_clicked(self, checked: bool):
-        """If show bboxes is checked, display bounding boxes and conf scores as overlay for the current image."""
-        if checked:
-            ocr_items = self.data_store.get_ocr_items()
-            current_img_item = self.data_store.get_current_img_item()
-            current_ocr_item = ocr_items.get(current_img_item.id)
-            if current_ocr_item is not None:
-                self.edited_img_viewer.bbox_overlay.set_regions(current_ocr_item)
-        else:
-            self.edited_img_viewer.bbox_overlay.clear_regions()
+
 
 
 

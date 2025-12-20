@@ -103,26 +103,6 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addWidget(self.edited_img_viewer)
 
-        self.frame_7 = QFrame(self.left_cont)
-        self.frame_7.setObjectName(u"frame_7")
-        self.frame_7.setFrameShape(QFrame.Shape.StyledPanel)
-        self.frame_7.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_2 = QHBoxLayout(self.frame_7)
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.horizontalLayout_2.setContentsMargins(5, 5, 5, 5)
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout_2.addItem(self.horizontalSpacer_3)
-
-        self.bboxes_chbox = QCheckBox(self.frame_7)
-        self.bboxes_chbox.setObjectName(u"bboxes_chbox")
-        self.bboxes_chbox.setEnabled(False)
-
-        self.horizontalLayout_2.addWidget(self.bboxes_chbox)
-
-
-        self.verticalLayout.addWidget(self.frame_7)
-
         self.verticalLayout.setStretch(1, 1)
 
         self.horizontalLayout.addWidget(self.left_cont)
@@ -437,7 +417,6 @@ class Ui_MainWindow(object):
         self.ocr_engine_combo = QComboBox(self.frame_11)
         self.ocr_engine_combo.addItem("")
         self.ocr_engine_combo.addItem("")
-        self.ocr_engine_combo.addItem("")
         self.ocr_engine_combo.setObjectName(u"ocr_engine_combo")
 
         self.verticalLayout_13.addWidget(self.ocr_engine_combo)
@@ -491,6 +470,35 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_12.addWidget(self.frame_9)
 
+        self.frame_7 = QFrame(self.ocr_settings_cont)
+        self.frame_7.setObjectName(u"frame_7")
+        self.frame_7.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_7.setFrameShadow(QFrame.Shadow.Raised)
+        self.horizontalLayout_2 = QHBoxLayout(self.frame_7)
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(5, 5, 5, 5)
+        self.bboxes_chbox = QCheckBox(self.frame_7)
+        self.bboxes_chbox.setObjectName(u"bboxes_chbox")
+        self.bboxes_chbox.setEnabled(False)
+
+        self.horizontalLayout_2.addWidget(self.bboxes_chbox)
+
+        self.horizontalSpacer_6 = QSpacerItem(20, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer_6)
+
+        self.avg_conf_lbl = QLabel(self.frame_7)
+        self.avg_conf_lbl.setObjectName(u"avg_conf_lbl")
+
+        self.horizontalLayout_2.addWidget(self.avg_conf_lbl)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer_3)
+
+
+        self.verticalLayout_12.addWidget(self.frame_7)
+
 
         self.verticalLayout_3.addWidget(self.ocr_settings_cont)
 
@@ -529,7 +537,6 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
         self.choose_files_btn.setText(QCoreApplication.translate("MainWindow", u"Choose files", None))
         self.clear_all_btn.setText(QCoreApplication.translate("MainWindow", u"Clear all", None))
-        self.bboxes_chbox.setText(QCoreApplication.translate("MainWindow", u"Show bboxes", None))
         self.grey_chbx.setText(QCoreApplication.translate("MainWindow", u"Grayscale", None))
         self.binarize_chbx.setText(QCoreApplication.translate("MainWindow", u"Binarize", None))
         self.binarize_val_lbl.setText(QCoreApplication.translate("MainWindow", u"127", None))
@@ -545,10 +552,11 @@ class Ui_MainWindow(object):
         self.reset_all_btn.setText(QCoreApplication.translate("MainWindow", u"Reset filters for all", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"Choose OCR engine", None))
         self.ocr_engine_combo.setItemText(0, QCoreApplication.translate("MainWindow", u"Tesseract", None))
-        self.ocr_engine_combo.setItemText(1, QCoreApplication.translate("MainWindow", u"PaddleOCR", None))
-        self.ocr_engine_combo.setItemText(2, QCoreApplication.translate("MainWindow", u"EasyOCR", None))
+        self.ocr_engine_combo.setItemText(1, QCoreApplication.translate("MainWindow", u"EasyOCR", None))
 
         self.label_6.setText(QCoreApplication.translate("MainWindow", u"Language", None))
         self.run_ocr_btn.setText(QCoreApplication.translate("MainWindow", u"Run OCR", None))
+        self.bboxes_chbox.setText(QCoreApplication.translate("MainWindow", u"Show bboxes", None))
+        self.avg_conf_lbl.setText("")
     # retranslateUi
 
