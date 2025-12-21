@@ -13,6 +13,32 @@ def resource_path(rel: str | Path) -> Path:
     return (base / rel).resolve()
 
 
+def get_app_data_dir() -> Path:
+    """Get platform-appropriate app data directory."""
+    app_name = "OCRViewer"
+
+    if sys.platform == "win32":
+        base = Path.home() / "AppData" / "Local"
+    elif sys.platform == "darwin":  # macOS
+        base = Path.home() / "Library" / "Application Support"
+    else:  # Linux
+        base = Path.home() / ".local" / "share"
+
+    app_dir = base / app_name
+    app_dir.mkdir(parents=True, exist_ok=True)
+    return app_dir
+
+
+def get_project_file() -> Path:
+    return get_app_data_dir() / "project.json"
+
+
+def get_cache_dir() -> Path:
+    cache_dir = get_app_data_dir() / "cache"
+    cache_dir.mkdir(exist_ok=True)
+    return cache_dir
+
+
 def open_file_dialog(parent=None, caption="Open File", directory="", filter_str="All Files (*)",
                      multi=False) -> str | list[str] | None:
     """
