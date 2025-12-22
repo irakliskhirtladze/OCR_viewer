@@ -18,8 +18,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QHBoxLayout, QLabel, QMainWindow, QPushButton,
     QRadioButton, QSizePolicy, QSlider, QSpacerItem,
-    QSpinBox, QStatusBar, QTextEdit, QVBoxLayout,
-    QWidget)
+    QSpinBox, QStatusBar, QVBoxLayout, QWidget)
 
 from ui.widgets.common.scroll_area import HorizontalThumbnailScrollArea
 from ui.widgets.edited_image_viewer import EditedImageViewer
@@ -88,7 +87,7 @@ class Ui_MainWindow(object):
         self.thumb_scroll_area.setWidgetResizable(True)
         self.thumb_scroll_widget = QWidget()
         self.thumb_scroll_widget.setObjectName(u"thumb_scroll_widget")
-        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 436, 134))
+        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 740, 134))
         self.thumb_scroll_area.setWidget(self.thumb_scroll_widget)
 
         self.verticalLayout_2.addWidget(self.thumb_scroll_area)
@@ -505,23 +504,8 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.control_cont)
 
-        self.text_cont = QFrame(self.centralwidget)
-        self.text_cont.setObjectName(u"text_cont")
-        self.text_cont.setFrameShape(QFrame.Shape.StyledPanel)
-        self.text_cont.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_13 = QHBoxLayout(self.text_cont)
-        self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
-        self.text_edit = QTextEdit(self.text_cont)
-        self.text_edit.setObjectName(u"text_edit")
-
-        self.horizontalLayout_13.addWidget(self.text_edit)
-
-
-        self.horizontalLayout.addWidget(self.text_cont)
-
         self.horizontalLayout.setStretch(0, 3)
         self.horizontalLayout.setStretch(2, 1)
-        self.horizontalLayout.setStretch(3, 2)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")

@@ -86,7 +86,7 @@ class FileManager(QObject):
             self.ui.statusbar.showMessage("Loading cancelled.", 5000)
 
     # ===============================
-    # Other logic
+    # Image viewing
     # ===============================
     @Slot(dict)
     def on_original_images_changed(self, img_items: dict[str, ImageItem]):
