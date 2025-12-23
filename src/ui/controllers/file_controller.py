@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QMainWindow, QHBoxLayout, QMessageBox
 from PySide6.QtGui import Qt, QPixmap
 
 from models.data_store import DataStore, ImageItem
-from ui.controllers.ocr_manager import OCRManager
+from ui.controllers.ocr_controller import OCRController
 from ui.generated.ui_mainwindow import Ui_MainWindow
 from ui.widgets.common.thumbnail_label import ThumbLabel
 from ui.workers.file_loader_thread import FileLoaderThread
@@ -11,12 +11,12 @@ from ui.workers.progress_runner import ProgressRunner
 from utils.file_utils import resource_path, open_file_dialog
 
 
-class FileManager(QObject):
-    def __init__(self, ui: Ui_MainWindow, data_store: DataStore, ocr_manager: OCRManager):
+class FileController(QObject):
+    def __init__(self, ui: Ui_MainWindow, data_store: DataStore, ocr_controller: OCRController):
         super().__init__()
         self.ui = ui
         self.data_store = data_store
-        self.ocr_manager = ocr_manager
+        self.ocr_controller = ocr_controller
 
         # Connect signals and slots
         self.ui.choose_files_btn.clicked.connect(self.choose_files_btn_clicked)
@@ -26,7 +26,7 @@ class FileManager(QObject):
         self.data_store.editedImagesChanged.connect(self.on_edited_images_changed)
         self.data_store.currentImageChanged.connect(self.on_current_image_changed)
 
-        self.ui.bboxes_chbox.toggled.connect(self.ocr_manager.on_show_bboxes_toggled)
+        self.ui.bboxes_chbox.toggled.connect(self.ocr_controller.on_show_bboxes_toggled)
 
         # Thumbnail scroller
         self.thumb_layout = QHBoxLayout()
@@ -150,7 +150,7 @@ class FileManager(QObject):
         self.ui.edited_img_viewer.image_viewer.load_pixmap(pixmap)
         if self.data_store.get_ocr_items().get(current_img_item.id) is not None:
             self.ui.bboxes_chbox.setEnabled(True)
-            self.ocr_manager.on_show_bboxes_toggled(self.ui.bboxes_chbox.isChecked())
+            self.ocr_controller.on_show_bboxes_toggled(self.ui.bboxes_chbox.isChecked())
         else:
             self.ui.bboxes_chbox.setEnabled(False)
             self.ui.edited_img_viewer.bbox_overlay.clear_regions()

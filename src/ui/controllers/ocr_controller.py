@@ -9,7 +9,7 @@ from utils.text_formatter import reconstruct_text
 from core.ocr_engine import TesseractEngine, EasyOCREngine
 
 
-class OCRManager(QObject):
+class OCRController(QObject):
     def __init__(self, ui: Ui_MainWindow, data_store: DataStore):
         super().__init__()
         self.ui = ui

@@ -11,7 +11,7 @@ from utils.image_converter import cv_to_qimage
 from core import image_processor
 
 
-class FilterManager(QObject):
+class FilterController(QObject):
     """Manages the logic of filters"""
     def __init__(self, ui: Ui_MainWindow, data_store: DataStore):
         super().__init__()
@@ -71,6 +71,69 @@ class FilterManager(QObject):
 
             self.data_store.clear_edited_images()
             self.ui.statusbar.showMessage("All filters reset successfully", 5000)
+
+    def get_memento(self) -> dict:
+        """Return current filter state as a serializable dict."""
+        return {
+            "grey": {"enabled": self.ui.grey_chbx.isChecked()},
+            "binary": {
+                "enabled": self.ui.binarize_chbx.isChecked(),
+                "threshold": self.ui.binarize_slider.value()
+            },
+            "invert": {"enabled": self.ui.invert_chbx.isChecked()},
+            "median_blur": {
+                "enabled": self.ui.median_chbx.isChecked(),
+                "k_size": self.ui.median_ksize_spinbox.value()
+            },
+            "dilate_erode": {
+                "enabled": self.ui.dilate_erode_chbx.isChecked(),
+                "mode": "dilate" if self.ui.dilate_radio.isChecked() else "erode",
+                "k_size": self.ui.dilate_erode_ksize_spinbox.value(),
+                "iterations": self.ui.dilate_erode_iter_spinbox.value()
+            }
+        }
+
+    def set_memento(self, state: dict):
+        """Restore filter state from a dict. Silently ignores missing keys."""
+        if not state:
+            return
+
+        # Grey
+        if "grey" in state:
+            self.ui.grey_chbx.setChecked(state["grey"].get("enabled", False))
+
+        # Binary
+        if "binary" in state:
+            enabled = state["binary"].get("enabled", False)
+            self.ui.binarize_chbx.setChecked(enabled)
+            self.ui.binarize_slider.setValue(state["binary"].get("threshold", 127))
+            self.ui.binarize_slider.setEnabled(enabled)
+
+        # Invert
+        if "invert" in state:
+            self.ui.invert_chbx.setChecked(state["invert"].get("enabled", False))
+
+        # Median blur
+        if "median_blur" in state:
+            enabled = state["median_blur"].get("enabled", False)
+            self.ui.median_chbx.setChecked(enabled)
+            self.ui.median_ksize_spinbox.setValue(state["median_blur"].get("k_size", 3))
+            self.ui.median_ksize_spinbox.setEnabled(enabled)
+
+        # Dilate/Erode
+        if "dilate_erode" in state:
+            enabled = state["dilate_erode"].get("enabled", False)
+            self.ui.dilate_erode_chbx.setChecked(enabled)
+            if state["dilate_erode"].get("mode", "dilate") == "dilate":
+                self.ui.dilate_radio.setChecked(True)
+            else:
+                self.ui.erode_radio.setChecked(True)
+            self.ui.dilate_erode_ksize_spinbox.setValue(state["dilate_erode"].get("k_size", 2))
+            self.ui.dilate_erode_iter_spinbox.setValue(state["dilate_erode"].get("iterations", 1))
+            self.ui.dilate_radio.setEnabled(enabled)
+            self.ui.erode_radio.setEnabled(enabled)
+            self.ui.dilate_erode_ksize_spinbox.setEnabled(enabled)
+            self.ui.dilate_erode_iter_spinbox.setEnabled(enabled)
 
     # ===================
     # apply filters to all images in a separate thread
