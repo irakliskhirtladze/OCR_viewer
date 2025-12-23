@@ -29,16 +29,6 @@ def get_app_data_dir() -> Path:
     return app_dir
 
 
-def get_project_file() -> Path:
-    return get_app_data_dir() / "project.json"
-
-
-def get_cache_dir() -> Path:
-    cache_dir = get_app_data_dir() / "cache"
-    cache_dir.mkdir(exist_ok=True)
-    return cache_dir
-
-
 def open_file_dialog(parent=None, caption="Open File", directory="", filter_str="All Files (*)",
                      multi=False) -> str | list[str] | None:
     """

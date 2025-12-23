@@ -49,10 +49,6 @@ class OCRController(QObject):
 
         self.on_show_bboxes_toggled(self.ui.bboxes_chbox.isChecked())
 
-        text = "Sample text"
-        self.ui.text_edit.clear()
-        self.ui.text_edit.setText(text)
-
     @Slot(bool)
     def on_show_bboxes_toggled(self, checked: bool):
         """If show bboxes is checked, display bounding boxes and conf scores as overlay for the current image."""
