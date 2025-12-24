@@ -21,6 +21,23 @@ class SessionManager:
         """Return True if a saved session exists."""
         return self._session_file.exists()
 
+    def _atomic_write(self, state: dict) -> None:
+        """Write JSON atomically to avoid corruption."""
+        tmp = self._session_file.with_suffix(".tmp")
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=4)
+        os.replace(tmp, self._session_file)
+
+    def _load(self) -> dict | None:
+        """Load JSON"""
+        if not self._session_file.exists():
+            return None
+        try:
+            with open(self._session_file, encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            return None
+
     def save(self, *, data_store: DataStore, ui: Ui_MainWindow | None = None) -> None:
         """Persist image paths and UI state to JSON, cache images as .npy."""
         state = {
@@ -54,6 +71,9 @@ class SessionManager:
         for f in self._cache_dir.glob("*.npy"):
             f.unlink()
 
+    # ============================================================
+    # save restore concrete widget states, files, etc
+    # ============================================================
     def _collect_images(self, data_store: DataStore) -> dict:
         """Cache original images as .npy, return metadata."""
         cached = {}
@@ -96,22 +116,6 @@ class SessionManager:
             "language": ui.lang_combo.currentText(),
             "show_bboxes": ui.bboxes_chbox.isChecked(),
         }
-
-    def _atomic_write(self, state: dict) -> None:
-        """Write JSON atomically to avoid corruption."""
-        tmp = self._session_file.with_suffix(".tmp")
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(state, f, indent=4)
-        os.replace(tmp, self._session_file)
-
-    def _load(self) -> dict | None:
-        if not self._session_file.exists():
-            return None
-        try:
-            with open(self._session_file, encoding="utf-8") as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError):
-            return None
 
     def _restore_images(self, data_store: DataStore, images: dict, current_id: str) -> None:
         items = {}
