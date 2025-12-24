@@ -29,6 +29,12 @@ def get_app_data_dir() -> Path:
     return app_dir
 
 
+def get_cache_dir() -> Path:
+    cache = get_app_data_dir() / "cache"
+    cache.mkdir(exist_ok=True)
+    return cache
+
+
 def open_file_dialog(parent=None, caption="Open File", directory="", filter_str="All Files (*)",
                      multi=False) -> str | list[str] | None:
     """

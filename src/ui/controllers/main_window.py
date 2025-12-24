@@ -26,7 +26,6 @@ class MainWindow(QMainWindow):
 
         # Session manager
         self.session_manager = SessionManager()
-        self.session_manager.register("filters", self.filter_controller)
 
         # Try restore on startup (after UI is ready)
         QTimer.singleShot(100, self._try_restore_session)
@@ -71,15 +70,16 @@ class MainWindow(QMainWindow):
         )
 
         if reply == QMessageBox.Yes:
-            state = self.session_manager.load()
-            if state:
-                self.session_manager.restore_state(state)
+            if self.session_manager.restore(data_store=self.data_store, ui=self.ui):
                 self.ui.statusbar.showMessage("Session restored", 3000)
         else:
             self.session_manager.clear()
 
     def _save_project(self):
-        self.session_manager.save()
+        self.session_manager.save(
+            data_store=self.data_store,
+            ui=self.ui,
+        )
 
     def _clear_saved_state(self):
         self.session_manager.clear()

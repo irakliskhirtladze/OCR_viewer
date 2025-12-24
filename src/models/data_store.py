@@ -1,9 +1,11 @@
+import hashlib
 from pathlib import Path
 import numpy as np
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QImage
 from dataclasses import dataclass
 
+from utils.file_utils import get_cache_dir
 from utils.image_converter import cv_to_qimage
 
 
@@ -144,4 +146,3 @@ class DataStore(QObject):
     def clear_ocr_items(self):
         self._ocr_items.clear()
         self.ocrResultsChanged.emit(self._ocr_items)
-
