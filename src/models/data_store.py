@@ -16,15 +16,18 @@ class ImageItem:
     path: str
     page: int | None = None
     id: str = ""
+    display_name: str = ""
 
     def __post_init__(self):
         """Auto-generate ID from path + page"""
         if not self.id and self.path:
             resolved_path = Path(self.path).resolve().as_posix()
             if self.page is not None:
-                self.id = f"{resolved_path}#page{self.page}"
+                self.display_name = f"{resolved_path}#page{self.page}"
             else:
-                self.id = resolved_path
+                self.display_name = resolved_path
+
+            self.id = hashlib.md5(self.display_name.encode()).hexdigest()[:12]
 
     def is_null(self) -> bool:
         """Check if this is an empty/null image item"""

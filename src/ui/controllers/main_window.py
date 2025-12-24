@@ -46,11 +46,15 @@ class MainWindow(QMainWindow):
         )
 
         if reply == QMessageBox.Yes:
-            self._save_project()
+            self.session_manager.clear()
+            self.session_manager.save(
+                data_store=self.data_store,
+                ui=self.ui,
+            )
             event.accept()
         elif reply == QMessageBox.No:
             # Clear the saved flag so startup knows not to resume
-            self._clear_saved_state()
+            self.session_manager.clear()
             event.accept()
         else:  # Cancel
             event.ignore()
@@ -74,12 +78,3 @@ class MainWindow(QMainWindow):
                 self.ui.statusbar.showMessage("Session restored", 3000)
         else:
             self.session_manager.clear()
-
-    def _save_project(self):
-        self.session_manager.save(
-            data_store=self.data_store,
-            ui=self.ui,
-        )
-
-    def _clear_saved_state(self):
-        self.session_manager.clear()

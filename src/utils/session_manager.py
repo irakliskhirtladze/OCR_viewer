@@ -1,4 +1,3 @@
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -59,10 +58,10 @@ class SessionManager:
         """Cache original images as .npy, return metadata."""
         cached = {}
         for img_id, item in data_store.get_img_items().items():
-            hash_name = hashlib.md5(img_id.encode()).hexdigest()[:12]
-            cache_path = self._cache_dir / f"{hash_name}.npy"
+            cache_path = self._cache_dir / f"{img_id}.npy"
             np.save(cache_path, item.image)
-            cached[img_id] = {"cache": str(cache_path), "path": item.path, "page": item.page}
+            cached[img_id] = {"cache": str(cache_path), "path": item.path, "page": item.page,
+                              "display_name": item.display_name}
         return cached
 
     def _get_current_id(self, data_store: DataStore) -> str:
@@ -75,13 +74,20 @@ class SessionManager:
             "binary": ui.binarize_chbx.isChecked(),
             "binary_val": ui.binarize_slider.value(),
             "binary_enabled": ui.binarize_slider.isEnabled(),
+            "binary_lbl": ui.binarize_val_lbl.text(),
             "invert": ui.invert_chbx.isChecked(),
             "median": ui.median_chbx.isChecked(),
             "median_k": ui.median_ksize_spinbox.value(),
+            "median_k_enabled": ui.median_ksize_spinbox.isEnabled(),
             "dilate_erode": ui.dilate_erode_chbx.isChecked(),
             "dilate": ui.dilate_radio.isChecked(),
-            "dilate_k": ui.dilate_erode_ksize_spinbox.value(),
-            "dilate_iter": ui.dilate_erode_iter_spinbox.value(),
+            "dilate_enabled": ui.dilate_radio.isEnabled(),
+            "erode": ui.erode_radio.isChecked(),
+            "erode_enabled": ui.erode_radio.isEnabled(),
+            "dilate_erode_k": ui.dilate_erode_ksize_spinbox.value(),
+            "dilate_erode_k_enabled": ui.dilate_erode_ksize_spinbox.isEnabled(),
+            "dilate_erode_iter": ui.dilate_erode_iter_spinbox.value(),
+            "dilate_erode_iter_enabled": ui.dilate_erode_iter_spinbox.isEnabled(),
         }
 
     def _collect_ocr_settings(self, ui: Ui_MainWindow) -> dict:
@@ -95,7 +101,7 @@ class SessionManager:
         """Write JSON atomically to avoid corruption."""
         tmp = self._session_file.with_suffix(".tmp")
         with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(state, f)
+            json.dump(state, f, indent=4)
         os.replace(tmp, self._session_file)
 
     def _load(self) -> dict | None:
@@ -116,6 +122,7 @@ class SessionManager:
                     image=np.load(cache_path),
                     path=info["path"],
                     page=info.get("page"),
+                    display_name=info["display_name"],
                     id=img_id,
                 )
         if items:
@@ -136,14 +143,20 @@ class SessionManager:
             ui.binarize_chbx.setChecked(f.get("binary", False))
             ui.binarize_slider.setValue(f.get("binary_val", 127))
             ui.binarize_slider.setEnabled(f.get("binary_enabled", False))
+            ui.binarize_val_lbl.setText(f.get("binary_lbl", ""))
             ui.invert_chbx.setChecked(f.get("invert", False))
             ui.median_chbx.setChecked(f.get("median", False))
             ui.median_ksize_spinbox.setValue(f.get("median_k", 3))
+            ui.median_ksize_spinbox.setEnabled(f.get("median_k_enabled", False))
             ui.dilate_erode_chbx.setChecked(f.get("dilate_erode", False))
             ui.dilate_radio.setChecked(f.get("dilate", True))
-            ui.erode_radio.setChecked(not f.get("dilate", True))
-            ui.dilate_erode_ksize_spinbox.setValue(f.get("dilate_k", 2))
-            ui.dilate_erode_iter_spinbox.setValue(f.get("dilate_iter", 1))
+            ui.dilate_radio.setEnabled(f.get("dilate_enabled", False))
+            ui.erode_radio.setChecked(f.get("erode", False))
+            ui.erode_radio.setEnabled(f.get("erode_enabled", False))
+            ui.dilate_erode_ksize_spinbox.setValue(f.get("dilate_erode_k", 2))
+            ui.dilate_erode_ksize_spinbox.setEnabled(f.get("dilate_erode_k_enabled", False))
+            ui.dilate_erode_iter_spinbox.setValue(f.get("dilate_erode_iter", 1))
+            ui.dilate_erode_iter_spinbox.setEnabled(f.get("dilate_erode_iter_enabled", False))
         finally:
             del blockers
 
