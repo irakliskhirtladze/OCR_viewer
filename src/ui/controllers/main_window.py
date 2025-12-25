@@ -32,11 +32,6 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event: QCloseEvent):
         """Ask user to save before closing."""
-        # Check if there's unsaved work
-        if not self._has_unsaved_changes():
-            event.accept()
-            return
-
         reply = QMessageBox.question(
             self,
             "Save Progress",

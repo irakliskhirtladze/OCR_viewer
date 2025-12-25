@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-from PySide6.QtWidgets import QFileDialog, QErrorMessage
+from PySide6.QtWidgets import QFileDialog, QErrorMessage, QWidget
 
 
 def resource_path(rel: str | Path) -> Path:
@@ -49,9 +49,24 @@ def open_file_dialog(parent=None, caption="Open File", directory="", filter_str=
         Path str (single), list[str] (multi), or None (cancelled).
     """
     if multi:
-        files, _ = QFileDialog.getOpenFileNames(parent, caption, directory, filter_str)
-        return files if files else None
+        file_paths, _ = QFileDialog.getOpenFileNames(parent, caption, directory, filter_str)
+        return file_paths if file_paths else None
     else:
         file_path, _ = QFileDialog.getOpenFileName(parent, caption, directory, filter_str)
-
         return file_path if file_path else None
+
+
+def save_file_dialog(parent: QWidget | None = None, caption="Save File", directory="",
+                     filter_str="All Files (*)") -> str | None:
+    """Allow user to save a file to selected directory."""
+    file_path, _ = QFileDialog.getSaveFileName(parent, caption, directory, filter_str)
+    return file_path
+
+
+def get_dir_dialog(parent: QWidget | None = None, caption: str = "Select Directory", directory: str = "") -> str | None:
+    dir_path = QFileDialog.getExistingDirectory(
+        parent=parent,
+        caption=caption,
+        dir=directory
+    )
+    return dir_path if dir_path else None

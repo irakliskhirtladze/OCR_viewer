@@ -1,9 +1,10 @@
 from PySide6.QtGui import QPixmap, Qt, QPainter
 from PySide6.QtWidgets import QFrame, QLabel
-from PySide6.QtCore import QEvent, QPoint, QTimer
+from PySide6.QtCore import QEvent, QPoint, QTimer, Signal
 
 
 class ImageViewer(QFrame):
+    transformChanged = Signal()  # Emitted when zoom or pan changes
     """
     Reusable image viewer widget with pan, zoom, and zoom indicator.
     
@@ -114,6 +115,7 @@ class ImageViewer(QFrame):
             self._clamp_pan_offset()
             self.last_mouse_pos = event.pos()
             self.update()
+            self.transformChanged.emit()
         super().mouseMoveEvent(event)
     
     def mouseReleaseEvent(self, event):
@@ -164,6 +166,7 @@ class ImageViewer(QFrame):
                         self._zoom_at_point(mouse_pos, old_zoom)
                     
                     self._update_zoom_indicator()
+                    self.transformChanged.emit()
                 return True
         
         return super().eventFilter(obj, event)

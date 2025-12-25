@@ -1,3 +1,6 @@
+from pathlib import Path
+
+import cv2
 from PySide6.QtCore import Slot, QObject
 from PySide6.QtWidgets import QMessageBox
 
@@ -5,8 +8,10 @@ from models.data_store import DataStore, OCRItem
 from ui.generated.ui_mainwindow import Ui_MainWindow
 from ui.workers.ocr_thread import OCRThread
 from ui.workers.progress_runner import ProgressRunner
+from utils.file_utils import save_file_dialog, resource_path, get_dir_dialog
 from utils.text_formatter import reconstruct_text
 from core.ocr_engine import TesseractEngine, EasyOCREngine
+import pymupdf
 
 
 class OCRController(QObject):
@@ -28,6 +33,7 @@ class OCRController(QObject):
         self.ui.ocr_engine_combo.currentTextChanged.connect(self.on_ocr_engine_changed)
         self.ui.run_ocr_btn.clicked.connect(self.on_run_ocr_btn_clicked)
         self.data_store.ocrResultsChanged.connect(self.on_ocr_results_changed)
+        self.ui.export_pdf_btn.clicked.connect(self.pdf_export_btn_clicked)
 
         # Progress runner for OCR processing
         self._runner = ProgressRunner(self.ui.centralwidget, "OCR", "Recognizing text...")
@@ -106,6 +112,7 @@ class OCRController(QObject):
             current_img_item = self.data_store.get_current_img_item()
             if not current_img_item.is_null() and not ocr_items.get(current_img_item.id).is_null():
                 self.ui.bboxes_chbox.setEnabled(True)
+                self.ui.export_pdf_btn.setEnabled(True)
         else:
             self.ui.statusbar.showMessage("No OCR items added.", 5000)
 
@@ -117,3 +124,48 @@ class OCRController(QObject):
         """Called when OCR completes, errors, or is cancelled."""
         if cancelled:
             self.ui.statusbar.showMessage("OCR cancelled.", 5000)
+
+    # ===============================
+    # PDF Export
+    # ===============================
+    @Slot()
+    def pdf_export_btn_clicked(self):
+        edited_img_items = self.data_store.get_edited_images()
+        ocr_items = self.data_store.get_ocr_items()
+
+        # file_path = save_file_dialog(self.ui.centralwidget, "Save PDF",
+        #                              directory=resource_path("test_exports").as_posix(), filter_str="PDF (*.pdf)")
+        dir_path = get_dir_dialog(self.ui.centralwidget, "Select Directory",
+                                  directory=resource_path("test_exports").as_posix())
+
+        if dir_path:
+            for img_item in edited_img_items.values():
+                cv_img = img_item.image
+                img_name = Path(img_item.display_name).stem + ".pdf"
+
+                # Encode image to a memory buffer (e.g., JPEG)
+                rgb_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+                is_success, buffer = cv2.imencode(".jpg", rgb_img)
+                img_bytes = buffer.tobytes()
+
+                with pymupdf.open() as doc:
+                    page = doc.new_page(width=cv_img.shape[1], height=cv_img.shape[0])
+                    page.insert_image(page.rect, stream=img_bytes)
+
+                    # Place invisible text based on bboxes present on each image
+                    ocr_item = ocr_items.get(img_item.id)
+                    for region in ocr_item.regions:
+                        x, y, w, h = region.bbox
+                        text = region.text
+                        
+                        # Calculate fontsize to fit width
+                        fontsize = int(h)
+                        font = "helv"
+                        while pymupdf.get_text_length(text, fontname=font, fontsize=fontsize) > w and fontsize > 4:
+                            fontsize -= 1
+                        
+                        # Baseline is ~80% down from top (typical for most fonts)
+                        baseline_y = int(y) + int(fontsize * 0.8)
+                        page.insert_text((int(x), baseline_y), text, fontname=font, fontsize=fontsize, render_mode=3)
+
+                    doc.save(Path(dir_path, img_name))

@@ -38,7 +38,7 @@ class FileController(QObject):
         self._runner = ProgressRunner(self.ui.centralwidget, "Loading", "Loading images...")
 
     # ===============================
-    # file loading
+    # file loading in separate thread
     # ===============================
     @Slot(bool)
     def choose_files_btn_clicked(self):

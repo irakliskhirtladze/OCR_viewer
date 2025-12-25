@@ -608,6 +608,19 @@
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_12">
              <item>
+              <spacer name="horizontalSpacer_4">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
               <widget class="QPushButton" name="apply_to_all_btn">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
@@ -626,6 +639,19 @@
                 <string>Reset filters for all</string>
                </property>
               </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_8">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
              </item>
             </layout>
            </widget>
@@ -744,19 +770,6 @@
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_10">
              <item>
-              <spacer name="horizontalSpacer_4">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>93</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
               <widget class="QPushButton" name="run_ocr_btn">
                <property name="enabled">
                 <bool>false</bool>
@@ -812,7 +825,7 @@
                 <bool>false</bool>
                </property>
                <property name="text">
-                <string>Show bboxes</string>
+                <string>OCR overlay</string>
                </property>
               </widget>
              </item>
@@ -841,6 +854,32 @@
              </item>
              <item>
               <spacer name="horizontalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Policy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="export_pdf_btn">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>Export PDF</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_7">
                <property name="orientation">
                 <enum>Qt::Orientation::Horizontal</enum>
                </property>
