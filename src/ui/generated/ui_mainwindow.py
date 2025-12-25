@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'mainwindow.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.10.1
+## Created by: Qt User Interface Compiler version 6.10.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -18,8 +18,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QHBoxLayout, QLabel, QMainWindow, QPushButton,
     QRadioButton, QSizePolicy, QSlider, QSpacerItem,
-    QSpinBox, QStatusBar, QTextEdit, QVBoxLayout,
-    QWidget)
+    QSpinBox, QStatusBar, QVBoxLayout, QWidget)
 
 from ui.widgets.common.scroll_area import HorizontalThumbnailScrollArea
 from ui.widgets.edited_image_viewer import EditedImageViewer
@@ -28,7 +27,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1088, 792)
+        MainWindow.resize(1088, 776)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
@@ -88,7 +87,7 @@ class Ui_MainWindow(object):
         self.thumb_scroll_area.setWidgetResizable(True)
         self.thumb_scroll_widget = QWidget()
         self.thumb_scroll_widget.setObjectName(u"thumb_scroll_widget")
-        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 436, 134))
+        self.thumb_scroll_widget.setGeometry(QRect(0, 0, 769, 136))
         self.thumb_scroll_area.setWidget(self.thumb_scroll_widget)
 
         self.verticalLayout_2.addWidget(self.thumb_scroll_area)
@@ -368,6 +367,10 @@ class Ui_MainWindow(object):
         self.frame_13.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_12 = QHBoxLayout(self.frame_13)
         self.horizontalLayout_12.setObjectName(u"horizontalLayout_12")
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_12.addItem(self.horizontalSpacer_4)
+
         self.apply_to_all_btn = QPushButton(self.frame_13)
         self.apply_to_all_btn.setObjectName(u"apply_to_all_btn")
         self.apply_to_all_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -379,6 +382,10 @@ class Ui_MainWindow(object):
         self.reset_all_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_12.addWidget(self.reset_all_btn)
+
+        self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_12.addItem(self.horizontalSpacer_8)
 
 
         self.verticalLayout_4.addWidget(self.frame_13)
@@ -452,10 +459,6 @@ class Ui_MainWindow(object):
         self.frame_9.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_10 = QHBoxLayout(self.frame_9)
         self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
-        self.horizontalSpacer_4 = QSpacerItem(93, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout_10.addItem(self.horizontalSpacer_4)
-
         self.run_ocr_btn = QPushButton(self.frame_9)
         self.run_ocr_btn.setObjectName(u"run_ocr_btn")
         self.run_ocr_btn.setEnabled(False)
@@ -492,9 +495,19 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.avg_conf_lbl)
 
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.horizontalSpacer_3 = QSpacerItem(20, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer_3)
+
+        self.export_pdf_btn = QPushButton(self.frame_7)
+        self.export_pdf_btn.setObjectName(u"export_pdf_btn")
+        self.export_pdf_btn.setEnabled(False)
+
+        self.horizontalLayout_2.addWidget(self.export_pdf_btn)
+
+        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer_7)
 
 
         self.verticalLayout_12.addWidget(self.frame_7)
@@ -505,23 +518,8 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.control_cont)
 
-        self.text_cont = QFrame(self.centralwidget)
-        self.text_cont.setObjectName(u"text_cont")
-        self.text_cont.setFrameShape(QFrame.Shape.StyledPanel)
-        self.text_cont.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_13 = QHBoxLayout(self.text_cont)
-        self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
-        self.text_edit = QTextEdit(self.text_cont)
-        self.text_edit.setObjectName(u"text_edit")
-
-        self.horizontalLayout_13.addWidget(self.text_edit)
-
-
-        self.horizontalLayout.addWidget(self.text_cont)
-
         self.horizontalLayout.setStretch(0, 3)
         self.horizontalLayout.setStretch(2, 1)
-        self.horizontalLayout.setStretch(3, 2)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -556,7 +554,8 @@ class Ui_MainWindow(object):
 
         self.label_6.setText(QCoreApplication.translate("MainWindow", u"Language", None))
         self.run_ocr_btn.setText(QCoreApplication.translate("MainWindow", u"Run OCR", None))
-        self.bboxes_chbox.setText(QCoreApplication.translate("MainWindow", u"Show bboxes", None))
+        self.bboxes_chbox.setText(QCoreApplication.translate("MainWindow", u"OCR overlay", None))
         self.avg_conf_lbl.setText("")
+        self.export_pdf_btn.setText(QCoreApplication.translate("MainWindow", u"Export PDF", None))
     # retranslateUi
 

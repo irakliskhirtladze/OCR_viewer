@@ -1,9 +1,11 @@
+import hashlib
 from pathlib import Path
 import numpy as np
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QImage
 from dataclasses import dataclass
 
+from utils.file_utils import get_cache_dir
 from utils.image_converter import cv_to_qimage
 
 
@@ -14,15 +16,18 @@ class ImageItem:
     path: str
     page: int | None = None
     id: str = ""
+    display_name: str = ""
 
     def __post_init__(self):
         """Auto-generate ID from path + page"""
         if not self.id and self.path:
             resolved_path = Path(self.path).resolve().as_posix()
             if self.page is not None:
-                self.id = f"{resolved_path}#page{self.page}"
+                self.display_name = f"{resolved_path}#page{self.page}"
             else:
-                self.id = resolved_path
+                self.display_name = resolved_path
+
+            self.id = hashlib.md5(self.display_name.encode()).hexdigest()[:12]
 
     def is_null(self) -> bool:
         """Check if this is an empty/null image item"""
@@ -144,4 +149,3 @@ class DataStore(QObject):
     def clear_ocr_items(self):
         self._ocr_items.clear()
         self.ocrResultsChanged.emit(self._ocr_items)
-

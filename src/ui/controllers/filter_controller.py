@@ -11,7 +11,7 @@ from utils.image_converter import cv_to_qimage
 from core import image_processor
 
 
-class FilterManager(QObject):
+class FilterController(QObject):
     """Manages the logic of filters"""
     def __init__(self, ui: Ui_MainWindow, data_store: DataStore):
         super().__init__()

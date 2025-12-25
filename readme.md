@@ -1,12 +1,14 @@
 # OCR viewer
 This app is supposed to work as visual multi-tool software for complex OCR tasks.
 
-The goal is to have an extensible software that can work on batch of images/PDF; apply OpenCV processing
-on them visually; Try different OCR engines, such as Tesseract, EasyOCR, TrOCR, etc...; Being able to fine
-tune deep learning models; preserve document layouts, export files, and maybe more as needed.
+Currently it has support for 2 OCR engines with few languages for testing.
 
-The app is intended to be suitable for OCR specialists and developers able to customize source 
-code to add/modify certain features.
+# Planned features
+* progress saving
+* ID simplification
+* OCR result exporting as searchable PDF
+* adding deskew filter
+* Add yolo + trocr as advanced ocr solution
 
 # PySide instructions
 To generate .py from .ui file:
