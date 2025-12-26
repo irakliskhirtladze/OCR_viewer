@@ -160,12 +160,17 @@ class OCRController(QObject):
                         
                         # Calculate fontsize to fit width
                         fontsize = int(h)
-                        font = "helv"
-                        while pymupdf.get_text_length(text, fontname=font, fontsize=fontsize) > w and fontsize > 4:
+                        font = pymupdf.Font("figo")
+                        while font.text_length(text, fontsize=fontsize) > w and fontsize > 4:
                             fontsize -= 1
                         
                         # Baseline is ~80% down from top (typical for most fonts)
                         baseline_y = int(y) + int(fontsize * 0.8)
-                        page.insert_text((int(x), baseline_y), text, fontname=font, fontsize=fontsize, render_mode=3)
+                        page.insert_font(fontname="F0", fontbuffer=font.buffer)
+                        page.insert_text((int(x), baseline_y), text, fontname="F0", fontsize=fontsize, render_mode=3)
 
-                    doc.save(Path(dir_path, img_name))
+                    try:
+                        doc.save(Path(dir_path, img_name))
+                        self.ui.statusbar.showMessage("Exported PDF successfully.", 5000)
+                    except Exception:
+                        self.ui.statusbar.showMessage(f"Error - File is likely open and cannot be overwritten", 5000)
